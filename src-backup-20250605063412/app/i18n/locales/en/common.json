@@ -1,0 +1,35 @@
+{
+  "header": {
+    "home": "Home",
+    "tours": "Tours",
+    "destinations": "Destinations",
+    "accommodations": "Accommodations",
+    "about": "About Us",
+    "contact": "Contact",
+    "bookNow": "Book Now"
+  },
+  "language": {
+    "en": "English",
+    "sw": "Kiswahili",
+    "de": "Deutsch"
+  },
+  "currency": {
+    "USD": "US Dollar",
+    "EUR": "Euro",
+    "GBP": "British Pound",
+    "TZS": "Tanzanian Shilling"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "search": "Search",
+    "noResults": "No results found"
+  }
+}

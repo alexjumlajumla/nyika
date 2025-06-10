@@ -1,0 +1,57 @@
+{
+  "Index": {
+    "title": "Karibu Nyika Safaris",
+    "description": "Pata uzoefu bora wa safari barani Afrika"
+  },
+  "Navigation": {
+    "home": "Nyumbani",
+    "tours": "Safari",
+    "destinations": "Marudio",
+    "accommodations": "Malazi",
+    "blog": "Blogu",
+    "contact": "Mawasiliano",
+    "dashboard": "Dashibodi",
+    "signIn": "Ingia",
+    "signOut": "Toka",
+    "menuToggle": "Fungua menyu",
+    "themeToggle": "Badilisha mada"
+  },
+  "Auth": {
+    "signIn": "Ingia",
+    "signOut": "Toka",
+    "register": "Jisajili",
+    "forgotPassword": "Umesahau nenosiri?"
+  },
+  "Common": {
+    "loading": "Inapakia...",
+    "error": "Hitilafu imetokea",
+    "success": "Imefanikiwa",
+    "submit": "Wasilisha",
+    "cancel": "Ghairi",
+    "back": "Rudi",
+    "next": "Inayofuata",
+    "previous": "Iliyopita",
+    "search": "Tafuta"
+  },
+  "Dashboard": {
+    "title": "Dashibodi",
+    "welcome": "Karibu kwenye dashibodi, {email}!",
+    "welcomeCard": {
+      "title": "Karibu Kwenye Dashibodi Yako"
+    },
+    "signOut": "Toka",
+    "quickActions": {
+      "title": "Vitendo Haraka",
+      "editProfile": "Hariri Wasifu",
+      "viewBookings": "Angalia Ajira Zako",
+      "savedTours": "Safari Zilizohifadhiwa"
+    },
+    "profile": {
+      "title": "Wasifu Wako",
+      "name": "Jina",
+      "email": "Barua Pepe",
+      "role": "Jukumu",
+      "notProvided": "Haijatolewa"
+    }
+  }
+}

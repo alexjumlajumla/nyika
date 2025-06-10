@@ -1,0 +1,8 @@
+{
+  "title": "i18n Test Page",
+  "description": "This page demonstrates internationalization (i18n) in Next.js with next-intl.",
+  "i18nInfo": "Internationalization Information",
+  "currentLocale": "Current Locale",
+  "availableLocales": "Available Locales",
+  "backToHome": "Back to Home"
+}

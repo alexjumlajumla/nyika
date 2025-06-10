@@ -1,0 +1,232 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter, useParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Icons } from "@/components/icons";
+import { useAuth } from "@/providers/AuthProvider";
+import Link from "next/link";
+
+// Auth paths that should not be used as redirect targets
+const authPaths = ['/signin', '/signup', '/forgot-password', '/reset-password'] as const;
+
+// Debug function to log messages in development
+function debugLog(message: string, ...args: unknown[]) {
+  if (process.env.NODE_ENV === 'development') {
+    // eslint-disable-next-line no-console
+    console.log(`[SignIn] ${message}`, ...args);
+  }
+}
+
+export default function SignInPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const params = useParams();
+  const { signIn, user, isLoading: isAuthLoading } = useAuth();
+  const isMounted = true; // Always mounted in client components
+  
+  // Get locale from params or default to 'en'
+  const locale = (params?.locale as string) || 'en';
+  
+  // Handle successful sign-in
+  const handleSuccessfulSignIn = useCallback(() => {
+    if (!isMounted) return;
+    
+    const callbackUrl = searchParams.get('callbackUrl');
+    let redirectTo = `/${locale}`; // Default to home with current locale
+    
+    // If there's a valid callback URL, use it
+    if (callbackUrl) {
+      try {
+        // Create URL object from the callback URL
+        const url = new URL(callbackUrl, window.location.origin);
+        
+        // Ensure the callback URL is from the same origin for security
+        if (url.origin !== window.location.origin) {
+          throw new Error('Invalid callback URL: Cross-origin redirect');
+        }
+        
+        // Don't redirect back to auth pages to prevent loops
+        if (!authPaths.some(path => url.pathname.endsWith(path))) {
+          redirectTo = url.pathname + url.search + url.hash;
+        }
+      } catch (error) {
+        debugLog('Error processing callback URL:', error);
+        // Use default redirect on error
+      }
+    }
+    
+    debugLog('Sign-in successful, redirecting to:', redirectTo);
+    router.replace(redirectTo);
+  }, [isMounted, locale, router, searchParams]);
+
+  // Handle successful authentication
+  useEffect(() => {
+    if (!isMounted || isAuthLoading) return;
+    
+    if (user) {
+      handleSuccessfulSignIn();
+    }
+  }, [user, isAuthLoading, isMounted, handleSuccessfulSignIn]);
+  
+  // Show loading state while checking auth
+  if (isAuthLoading || !isMounted) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Basic validation
+    if (!email || !password) {
+      setError('Please enter both email and password');
+      return;
+    }
+    
+    setError("");
+    setIsLoading(true);
+
+    try {
+      const { error: signInError } = await signIn(email, password);
+      
+      if (signInError) {
+        // Handle specific error cases
+        let errorMessage = 'Failed to sign in. Please check your credentials.';
+        
+        if (signInError.message.includes('Invalid login credentials')) {
+          errorMessage = 'Invalid email or password. Please try again.';
+        } else if (signInError.message.includes('Email not confirmed')) {
+          errorMessage = 'Please verify your email before signing in.';
+        } else {
+          errorMessage = signInError.message || 'Failed to sign in. Please try again.';
+        }
+        
+        setError(errorMessage);
+        setIsLoading(false);
+        return;
+      }
+      
+      // The auth state change will trigger the redirect in the effect
+    } catch (error) {
+      // Log error in development only
+      debugLog('Sign in error:', error);
+      setError('An unexpected error occurred. Please try again.');
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Sign in to your account
+          </h2>
+        </div>
+        {error && (
+          <div className="rounded-md bg-red-50 p-4">
+            <div className="flex">
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">{error}</h3>
+              </div>
+            </div>
+          </div>
+        )}
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="-space-y-px rounded-md shadow-sm">
+            <div>
+              <Label htmlFor="email-address" className="sr-only">
+                Email address
+              </Label>
+              <Input
+                id="email-address"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className="relative block w-full rounded-t-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+            <div>
+              <Label htmlFor="password" className="sr-only">
+                Password
+              </Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                className="relative block w-full rounded-b-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <input
+                id="remember-me"
+                name="remember-me"
+                type="checkbox"
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                Remember me
+              </label>
+            </div>
+
+            <div className="text-sm">
+              <a href="#" className="font-medium text-primary hover:text-primary/80">
+                Forgot your password?
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="group relative flex w-full justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-white hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              {isLoading ? (
+                <>
+                  <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                'Sign in'
+              )}
+            </Button>
+          </div>
+        </form>
+        <div className="text-center text-sm text-gray-600">
+          Don't have an account?{' '}
+          <Link 
+            href={`/${locale}/signup`} 
+            className="font-medium text-primary hover:text-primary/80"
+          >
+            Sign up
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}

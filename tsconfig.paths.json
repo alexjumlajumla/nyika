@@ -1,0 +1,47 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/styles/*": ["./src/styles/*"],
+      "@/types/*": ["./src/types/*"],
+      "@/app/*": ["./src/app/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/public/*": ["./public/*"],
+      "@/auth": ["./src/auth"],
+      "@/auth/*": ["./src/auth/*"],
+      "@/providers/*": ["./src/providers/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "@/config/*": ["./src/config/*"],
+      "@/server/*": ["./src/server/*"],
+      "@/middleware": ["./src/middleware"],
+      "@/middleware/*": ["./src/middleware/*"],
+      "@/store/*": ["./src/store/*"],
+      "payload": ["./node_modules/payload"],
+      "payload/*": ["./node_modules/payload/*"],
+      "@payloadcms/*": ["./node_modules/@payloadcms/*"],
+      "payload/generated-types": ["./src/payload-types.ts"],
+      "@/payload-config": ["./src/payload.config.ts"],
+      "payload-config": ["./src/payload.config.ts"],
+      "payload/adapters/node": ["./node_modules/payload/dist/adapters/node"],
+      "@payloadcms/db-mongodb": ["./node_modules/@payloadcms/db-mongodb"],
+      "@payloadcms/bundler-webpack": ["./node_modules/@payloadcms/bundler-webpack"],
+      "@payloadcms/richtext-slate": ["./node_modules/@payloadcms/richtext-slate"]
+    },
+    "types": ["node", "next"]
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.js",
+    ".next/types/**/*.ts",
+    "next.config.js",
+    "src/payload/**/*.ts",
+    "src/payload/**/*.tsx",
+    "src/payload.config.ts"
+  ],
+  "exclude": ["node_modules", "**/*.test.ts", "**/*.test.tsx", "**/__tests__/**"]
+}

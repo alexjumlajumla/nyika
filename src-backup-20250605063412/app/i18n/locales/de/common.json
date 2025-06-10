@@ -1,0 +1,35 @@
+{
+  "header": {
+    "home": "Startseite",
+    "tours": "Touren",
+    "destinations": "Reiseziele",
+    "accommodations": "Unterkünfte",
+    "about": "Über Uns",
+    "contact": "Kontakt",
+    "bookNow": "Jetzt buchen"
+  },
+  "language": {
+    "en": "Englisch",
+    "sw": "Suaheli",
+    "de": "Deutsch"
+  },
+  "currency": {
+    "USD": "US-Dollar",
+    "EUR": "Euro",
+    "GBP": "Britisches Pfund",
+    "TZS": "Tansania-Schilling"
+  },
+  "common": {
+    "loading": "Wird geladen...",
+    "error": "Ein Fehler ist aufgetreten",
+    "success": "Erfolg",
+    "submit": "Absenden",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "view": "Anzeigen",
+    "search": "Suchen",
+    "noResults": "Keine Ergebnisse gefunden"
+  }
+}

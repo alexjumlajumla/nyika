@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "node_modules",
+    "**/src-backup-*",
+    "**/*.backup.*",
+    "**/backup-*",
+    "**/*-backup",
+    "**/backup",
+    "**/dist",
+    "**/.next",
+    "**/out",
+    "**/build"
+  ]
+}

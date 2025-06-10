@@ -1,0 +1,144 @@
+{
+  "footer": {
+    "title": "Footer",
+    "description": "Creating unforgettable African safari experiences with a commitment to sustainability and authentic cultural immersion.",
+    "quickLinks": "Quick Links",
+    "contactUs": "Contact Us",
+    "address": "123 Safari Way, Nairobi, Kenya",
+    "hours": "Mon - Fri, 8:00 AM - 5:00 PM EAT",
+    "newsletter": "Newsletter",
+    "newsletterDescription": "Subscribe to our newsletter for the latest safari deals and travel tips.",
+    "emailPlaceholder": "Your email address",
+    "allRightsReserved": "All rights reserved.",
+    "privacyPolicy": "Privacy Policy",
+    "terms": "Terms & Conditions",
+    "socialLink": "(opens in new tab)",
+    "subscribe": "Subscribe",
+    "subscribing": "Subscribing",
+    "subscribed": "Subscribed!"
+  },
+  "navigation": {
+    "home": "Home",
+    "destinations": "Destinations",
+    "tours": "Tours",
+    "accommodations": "Accommodations",
+    "about": "About Us",
+    "contact": "Contact",
+    "blog": "Blog"
+  },
+  "search": {
+    "placeholder": "Search destinations, tours, accommodations...",
+    "checkIn": "Check in",
+    "checkOut": "Check out",
+    "guests": "Guests",
+    "search": "Search"
+  },
+  "accommodation": {
+    "title": "Accommodations",
+    "filter": {
+      "title": "Filter by",
+      "priceRange": "Price Range",
+      "type": "Type",
+      "amenities": "Amenities",
+      "rating": "Rating"
+    },
+    "sort": {
+      "title": "Sort by",
+      "priceLowToHigh": "Price: Low to High",
+      "priceHighToLow": "Price: High to Low",
+      "ratingHighToLow": "Rating: High to Low",
+      "nameAZ": "Name: A to Z"
+    },
+    "amenities": {
+      "wifi": "Free WiFi",
+      "pool": "Swimming Pool",
+      "restaurant": "Restaurant",
+      "bar": "Bar",
+      "spa": "Spa",
+      "gym": "Gym",
+      "parking": "Free Parking",
+      "airConditioning": "Air Conditioning"
+    },
+    "types": {
+      "hotel": "Hotel",
+      "lodge": "Lodge",
+      "camp": "Camp",
+      "resort": "Resort"
+    },
+    "viewDetails": "View Details",
+    "perNight": "per night",
+    "reviews": "{{count}} reviews",
+    "noResults": "No accommodations found"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred. Please try again later.",
+    "learnMore": "Learn More",
+    "bookNow": "Book Now",
+    "contactUs": "Contact Us",
+    "readMore": "Read More",
+    "back": "Back",
+    "closeMenu": "Close menu",
+    "theme": "Theme",
+    "language": "Language",
+    "currency": "Currency"
+  },
+  "auth": {
+    "userMenu": "User menu",
+    "signIn": "Sign in",
+    "signOut": "Sign out"
+  },
+  "currency": {
+    "usd": "USD",
+    "tzs": "TZS",
+    "eur": "EUR",
+    "gbp": "GBP"
+  },
+  "language": {
+    "en": "English",
+    "sw": "Kiswahili"
+  },
+  "tour": {
+    "title": "Great Migration Safari",
+    "description": "Experience the incredible wildebeest migration in the Serengeti. This 8-day safari takes you to the heart of the action, where millions of wildebeest, zebras, and gazelles make their annual migration across the plains.",
+    "highlights": [
+      "Witness the Great Migration",
+      "Game drives in Serengeti and Ngorongoro",
+      "Hot air balloon safari over the Serengeti",
+      "Luxury tented camps and lodges"
+    ],
+    "itinerary": {
+      "title": "Tour Itinerary",
+      "day": "Day",
+      "day1": {
+        "title": "Arrival in Arusha",
+        "description": "Arrive at Kilimanjaro International Airport, transfer to your hotel in Arusha for overnight."
+      }
+    },
+    "included": [
+      "All park fees and taxes",
+      "Luxury tented camp and lodge accommodation",
+      "All meals and drinking water",
+      "Professional English-speaking guide",
+      "Private 4x4 safari vehicle with pop-up roof"
+    ],
+    "excluded": [
+      "International flights",
+      "Visa fees",
+      "Travel insurance",
+      "Tips and gratuities",
+      "Personal expenses"
+    ],
+    "overview": "Tour Overview",
+    "difficulty": "Difficulty",
+    "maxGroup": "Max Group Size",
+    "bookNow": "Book Now",
+    "whatIsIncluded": "What's Included",
+    "perPerson": "per person",
+    "reviews": "reviews",
+    "rating": "Rating",
+    "duration": "Duration",
+    "destinations": "Destinations",
+    "startLocation": "Start Location"
+  }
+}

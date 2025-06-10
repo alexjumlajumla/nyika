@@ -1,0 +1,167 @@
+{
+  "app": {
+    "name": "Nyika Safaris",
+    "tagline": "Jione Uzuri wa Mwitu wa Afrika",
+    "loading": "Inapakia...",
+    "error": "Hitilafu imetokea. Tafadhali jaribu tena baadaye.",
+    "notFound": "Ukurasa haupo",
+    "goBack": "Rudi Nyuma",
+    "readMore": "Soma Zaidi",
+    "viewAll": "Onyesha Zote",
+    "search": "Tafuta...",
+    "noResults": "Hakuna matokeo yaliyopatikana",
+    "loadingMore": "Inapakia zaidi..."
+  },
+  "navigation": {
+    "home": "Nyumbani",
+    "tours": "Safari",
+    "destinations": "Destinations",
+    "about": "Kuhusu Sisi",
+    "contact": "Wasiliana Nasi",
+    "blog": "Blogu",
+    "gallery": "Picha",
+    "testimonials": "Maoni",
+    "faq": "Maswali",
+    "login": "Ingia",
+    "register": "Jisajili",
+    "account": "Akaunti Yangu",
+    "dashboard": "Dashibodi",
+    "logout": "Ondoka",
+    "menu": "Menyu",
+    "close": "Funga"
+  },
+  "footer": {
+    "aboutUs": "Kuhusu Nyika Safaris",
+    "aboutDescription": "Kutoa uzoefu wa safari usiosahaulika katika moyo wa Afrika.",
+    "quickLinks": "Viungo Haraka",
+    "contactUs": "Wasiliana Nasi",
+    "address": "Nairobi, Kenya",
+    "phone": "+254 700 000000",
+    "email": "info@nyikasafaris.com",
+    "newsletter": "Barua pepe",
+    "newsletterDescription": "Jiandikishe kwa barua pepe yetu kwa ajili ya ofa za kipekee na sasisho.",
+    "subscribe": "Jiandikishe",
+    "socialMedia": "Tufuate",
+    "copyright": "© {year} Nyika Safaris. Haki zote zimehifadhiwa.",
+    "terms": "Sheria na Masharti",
+    "privacy": "Sera ya Faragha",
+    "cookies": "Vidakuzi",
+    "sitemap": "Ramani ya Tovuti"
+  },
+  "forms": {
+    "firstName": "Jina la Kwanza",
+    "lastName": "Jina la Mwisho",
+    "email": "Barua Pepe",
+    "phone": "Nambari ya Simu",
+    "message": "Ujumbe Wako",
+    "submit": "Tuma",
+    "sending": "Inatuma...",
+    "success": "Asante! Ujumbe wako umetumwa.",
+    "error": "Kuna hitilafu katika kutuma ujumbe wako. Tafadhali jaribu tena.",
+    "required": "Sehemu hii inahitajika",
+    "invalidEmail": "Tafadhali ingiza anwani ya barua pepe halali",
+    "invalidPhone": "Tafadhali ingiza nambari ya simu halali"
+  },
+  "auth": {
+    "loginTitle": "Karibu Tena",
+    "loginSubtitle": "Ingia kwenye akaunti yako",
+    "registerTitle": "Unda Akaunti",
+    "registerSubtitle": "Jiunge nasi kuanza safari yako",
+    "email": "Barua Pepe",
+    "password": "Nenosiri",
+    "confirmPassword": "Thibitisha Nenosiri",
+    "rememberMe": "Nikumbuke",
+    "forgotPassword": "Umesahau nenosiri?",
+    "noAccount": "Huna akaunti?",
+    "haveAccount": "Tayari una akaunti?",
+    "signIn": "Ingia",
+    "signUp": "Jisajili",
+    "orContinueWith": "Au endelea na",
+    "resetPassword": "Weka Upya Nenosiri",
+    "resetPasswordDescription": "Weka anwani yako ya barua pepe na tutakutumia kiungo cha kurekebisha nenosiri lako.",
+    "sendResetLink": "Tuma Kiungo cha Kurekebisha",
+    "backToLogin": "Rudi kwenye kuingia",
+    "passwordResetSent": "Kiungo cha kurekebisha nenosiri kimetumwa kwenye barua pepe yako.",
+    "passwordResetSuccess": "Nenosiri lako limewekwa upya kikamilifu.",
+    "passwordRequirements": "Nenosiri lazima liwe na herufi 8 au zaidi na iwe na nambari na herufi maalum.",
+    "passwordsDontMatch": "Nenosiri halilingani"
+  },
+  "booking": {
+    "bookNow": "Hifadhi Sasa",
+    "checkAvailability": "Angalia Upatikanaji",
+    "selectDate": "Chagua Tarehe",
+    "guests": "Wageni",
+    "adults": "Watu Wazima",
+    "children": "Watoto",
+    "infants": "Watoto Wadogo",
+    "duration": "Muda",
+    "priceFrom": "Kuanzia",
+    "perPerson": "kwa mtu",
+    "total": "Jumla",
+    "continue": "Endelea",
+    "completeBooking": "Kamilisha Kuhifadhi",
+    "bookingSummary": "Muhtasari wa Kuhifadhi",
+    "contactInfo": "Maelezo ya Mawasiliano",
+    "specialRequests": "Maombi Maalum",
+    "paymentMethod": "Njia ya Malipo",
+    "cardNumber": "Nambari ya Kadi",
+    "expiryDate": "Tarehe ya Mwisho",
+    "cvv": "CVV",
+    "nameOnCard": "Jina Kwenye Kadi",
+    "billingAddress": "Anwani ya Malipo",
+    "sameAsContact": "Sawa na maelezo ya mawasiliano",
+    "termsAgreement": "Nakubana na Sheria na Masharti na Sera ya Faragha",
+    "bookingConfirmation": "Uthibitishaji wa Kuhifadhi",
+    "bookingConfirmed": "Kuhifadhi kwako kumethibitishwa!",
+    "bookingReference": "Nambari ya Kumbukumbu",
+    "thankYouMessage": "Asante kwa kuchagua Nyika Safaris. Tumetuma barua pepe ya uthibitisho na maelezo ya kuhifadhi kwako.",
+    "whatsNext": "Nini Kifuatacho?",
+    "nextSteps": [
+      "Utapokea ratiba kamili ndani ya masaa 24.",
+      "Timu yetu itawasiliana nawe kuthibitisha maombi yoyote maalum.",
+      "Jisikie huru kututumia ukiwa na maswali yoyote."
+    ],
+    "viewBooking": "Ona Kuhifadhi",
+    "printItinerary": "Chapa Ratiba"
+  },
+  "testimonials": {
+    "title": "Watalii Wetu Wanasema Nini",
+    "subtitle": "Usichukue maneno yetu peke yako. Hapa ndio wageni wetu wanasema kuhusu uzoefu wao.",
+    "seeMore": "Soma zaidi ya maoni"
+  },
+  "error": {
+    "404": {
+      "title": "Ukurasa Haupatikani",
+      "message": "Ukurasa unaoutafuta haupo au umesogezwa.",
+      "cta": "Rudi Nyumbani"
+    },
+    "500": {
+      "title": "Hitilafu ya Seva",
+      "message": "Kuna kitu hakiko sawa. Tafadhali jaribu tena baadaye.",
+      "cta": "Jaribu Tena"
+    },
+    "offline": {
+      "title": "Huna Mtandao",
+      "message": "Tafadhali angalia muunganisho wako wa mtandao na ujaribu tena.",
+      "cta": "Jaribu Tena"
+    }
+  },
+  "seo": {
+    "home": {
+      "title": "Nyika Safaris | Safari za Kifahari Afrika",
+      "description": "Pata uzoefu bora wa safari za kifahari barani Afrika na Nyika Safaris. Safari maalum, waelekezaji wenye ujuzi, na uzoefu usiosahaulika wa wanyamapori."
+    },
+    "tours": {
+      "title": "Safari | Nyika Safaris",
+      "description": "Gundua mkusanyiko wetu wa safari zilizotengenezwa kwa makini katika maeneo ya kuvutia zaidi barani Afrika."
+    },
+    "about": {
+      "title": "Kuhusu Sisi | Nyika Safaris",
+      "description": "Jifunze kuhusu shauku yetu kwa safari za Kiafrika, timu yetu ya wataalam, na jitihada zetu za utalii endelevu."
+    },
+    "contact": {
+      "title": "Wasiliana Nasi | Nyika Safaris",
+      "description": "Wasiliana na wataalamu wetu wa safari kupanga safari yako ya ndoto ya Kiafrika."
+    }
+  }
+}

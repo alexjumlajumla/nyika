@@ -1,0 +1,89 @@
+{
+  "ToursPage": {
+    "title": "Our Safari Tours",
+    "description": "Discover our handpicked selection of African safari adventures",
+    "filters": {
+      "title": "Filter Tours",
+      "searchPlaceholder": "Search tours...",
+      "destinations": "Destinations",
+      "durations": "Durations",
+      "priceRange": "Price Range",
+      "ratings": "Ratings",
+      "applyFilters": "Apply Filters",
+      "clearAll": "Clear All"
+    },
+    "noTours": "No tours found. Please try adjusting your filters.",
+    "loading": "Loading tours...",
+    "error": "Failed to load tours. Please try again later."
+  },
+  "Index": {
+    "title": "Welcome to Nyika Safaris",
+    "description": "Experience the best safaris in Africa",
+    "navigation": "Site Navigation"
+  },
+  "Navigation": {
+    "home": "Home",
+    "tours": "Tours",
+    "destinations": "Destinations",
+    "accommodations": "Accommodations",
+    "blog": "Blog",
+    "contact": "Contact",
+    "dashboard": "Dashboard",
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "menuToggle": "Toggle menu",
+    "themeToggle": "Toggle theme"
+  },
+  "Auth": {
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "register": "Register",
+    "forgotPassword": "Forgot Password?"
+  },
+  "ContactPage": {
+    "title": "Contact Us",
+    "description": "Get in touch with our team for any inquiries or booking assistance.",
+    "form": {
+      "name": "Your Name",
+      "email": "Email Address",
+      "phone": "Phone Number",
+      "subject": "Subject",
+      "message": "Your Message",
+      "submit": "Send Message",
+      "success": "Thank you for your message! We'll get back to you soon.",
+      "error": "There was an error sending your message. Please try again later."
+    }
+  },
+  "Common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search"
+  },
+  "Dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome to the dashboard, {email}!",
+    "welcomeCard": {
+      "title": "Welcome to Your Dashboard"
+    },
+    "signOut": "Sign Out",
+    "quickActions": {
+      "title": "Quick Actions",
+      "editProfile": "Edit Profile",
+      "viewBookings": "View Bookings",
+      "savedTours": "Saved Tours"
+    },
+    "profile": {
+      "title": "Your Profile",
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "notProvided": "Not provided"
+    }
+  }
+}

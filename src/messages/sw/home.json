@@ -1,0 +1,53 @@
+{
+  "heroTitle": "Jione Nasi Katika",
+  "heroHighlight": "Uzuri wa Mwitu wa Afrika",
+  "heroDescription": "Anzisha safari isiyoweza kusahaulika kupitia moyo wa Afrika. Gundua mandhari ya kuvutia, wanyamapori wa fahari, na tamaduni tajiri.",
+  "heroImageAlt": "Nyika za Kiafrika wakati wa jua kuchwa na wanyamapori",
+  "ctaPrimary": "Hifadhi Safari Yako",
+  "ctaSecondary": "Jifunze Zaidi",
+  
+  "featuresTitle": "Kwa Nini Kuchagua Sisi",
+  "featuresSubtitle": "Uzoefu wa Safari Kama Hakuna Mwingine",
+  "featuresDescription": "Tunatoa uzoefu wa safari uliobinafsisho unaozidi kawaida. Hiki ndicho kinatutofautisha:",
+  
+  "features": {
+    "1": {
+      "title": "Waelekezaji Wenye Ujuzi",
+      "description": "Waelekezaji wetu wenye uzoefu wana ujuzi wa kina kuhusu wanyamapori na mifumo ikolojia ya Kiafrika."
+    },
+    "2": {
+      "title": "Malazi ya Kifahari",
+      "description": "Kaa katika malazi yaliyochaguliwa kwa uangalifu na kambi zinazochangia starehe na uzuri wa Kiafrika."
+    },
+    "3": {
+      "title": "Utalii Endelevu",
+      "description": "Tunajitolea kwa utalii wenye jukumu linalosaidia jamii za wenyeji na uhifadhi."
+    },
+    "4": {
+      "title": "Mipango Maalum ya Safari",
+      "description": "Uzoefu wa safari uliobinafsisho ulioundwa kulingana na masilahi na mapendekezo yako."
+    }
+  },
+  
+  "testimonials": {
+    "title": "Watalii Wetu Wanachosema",
+    "subtitle": "Usichukue maneno yetu peke yake. Hapa ndio wageni wetu wanachosema kuhusu uzoefu wao.",
+    "items": {
+      "1": {
+        "text": "Uzoefu bora wa safari katika maisha yetu! Waelekezaji walikuwa na ujuzi wa kushangaza na wakahakikisha tumeona wanyama wakubwa watano.",
+        "name": "Sarah Johnson",
+        "role": "Mtafuta Mavuno"
+      },
+      "2": {
+        "text": "Nyika Safaris walifanya kazi zaidi ya kawaida kuunda mpango maalum kwa familia yetu. Watoto bado wanasimulia kuhusu hiyo!",
+        "name": "Michael Chen",
+        "role": "Msafiri wa Familia"
+      },
+      "3": {
+        "text": "Kama mwanamke mwenye kusafiri peke yangu, nilijisikia salama kabisa na nilitunzwa vizuri wakati wote wa safari yangu. Ninasihi sana!",
+        "name": "Amina Bello",
+        "role": "Msafiri Pepe"
+      }
+    }
+  }
+}

@@ -1,0 +1,312 @@
+.filterContainer {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+  margin-bottom: 2rem;
+}
+
+.filterContainer:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.filterHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  position: relative;
+}
+
+.filterIcon {
+  margin-right: 0.75rem;
+  color: #8B5A2B;
+  font-size: 1.25rem;
+}
+
+.filterTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2D3748;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.clearAllButton {
+  background: none;
+  border: none;
+  color: #8B5A2B;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.clearAllButton:hover {
+  background: rgba(139, 90, 43, 0.1);
+}
+
+.filterSection {
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.filterSection:last-child {
+  margin-bottom: 0;
+}
+
+.filterButton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 0.875rem 1rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #4A5568;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+
+.filterButton:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #2D3748;
+}
+
+.filterButton[aria-expanded="true"] {
+  background: rgba(255, 255, 255, 0.9);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom: none;
+}
+
+.filterOptions {
+  max-height: 0;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid transparent;
+  border-top: none;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  transition: all 0.3s ease;
+  opacity: 0;
+  transform: translateY(-10px);
+  visibility: hidden;
+}
+
+.filterOptionsOpen {
+  max-height: 300px;
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+  border-color: rgba(0, 0, 0, 0.08);
+  border-top: none;
+  padding: 0.5rem 0;
+  overflow-y: auto;
+}
+
+.filterOption {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  color: #4A5568;
+  font-size: 0.9375rem;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.filterOption:hover {
+  background: rgba(0, 0, 0, 0.02);
+  color: #2D3748;
+}
+
+.filterCheckbox {
+  position: absolute;
+  opacity: 0;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #CBD5E0;
+  border-radius: 4px;
+  margin-right: 10px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.checkmark.checked {
+  background-color: #8B5A2B;
+  border-color: #8B5A2B;
+}
+
+.checkIcon {
+  color: white;
+  font-size: 0.75rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.checkmark.checked .checkIcon {
+  opacity: 1;
+}
+
+/* Months Grid */
+.monthsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.monthOption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 0.25rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.monthOption:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.monthCheckmark {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #E2E8F0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.monthOption:hover .monthCheckmark {
+  border-color: #CBD5E0;
+}
+
+.monthCheckmark.checked {
+  background-color: #8B5A2B;
+  border-color: #8B5A2B;
+}
+
+.monthName {
+  font-size: 0.75rem;
+  color: #4A5568;
+  margin-top: 0.125rem;
+  text-align: center;
+}
+
+/* Apply Button */
+.applyButton {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: linear-gradient(135deg, #8B5A2B 0%, #6B4423 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.applyButton:not(.disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.applyButton:not(.disabled):active {
+  transform: translateY(0);
+}
+
+.applyButton.disabled {
+  background: #E2E8F0;
+  color: #A0AEC0;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Scrollbar Styling */
+.filterOptions::-webkit-scrollbar {
+  width: 6px;
+}
+
+.filterOptions::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 3px;
+  margin: 4px 0;
+}
+
+.filterOptions::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.filterOptions::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .filterContainer {
+    padding: 1.25rem;
+  }
+  
+  .filterTitle {
+    font-size: 1.125rem;
+  }
+  
+  .filterButton {
+    padding: 0.75rem 1rem;
+  }
+  
+  .monthsGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .filterContainer {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+  
+  .filterHeader {
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.875rem;
+  }
+  
+  .filterButton {
+    font-size: 0.875rem;
+  }
+  
+  .monthsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

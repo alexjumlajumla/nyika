@@ -1,0 +1,92 @@
+{
+  "footer": {
+    "title": "Kijachini",
+    "description": "Kuunda uzoefu wa safari za Kiafrika ambazo hazisahauliki kwa kujitolea kwa uendelevu na ujiongozi wa kitamaduni.",
+    "quickLinks": "Viunguo Haraka",
+    "contactUs": "Wasiliana Nasi",
+    "address": "Barabara ya Safari 123, Nairobi, Kenya",
+    "hours": "Jumamosi - Ijumaa, 8:00 asubuhi - 5:00 jioni EAT",
+    "newsletter": "Barua pepe",
+    "newsletterDescription": "Jiandikishe kwa barua pepe yetu kwa ofa za safari na vidokezo vya usafiri.",
+    "emailPlaceholder": "Anwani yako ya barua pepe",
+    "allRightsReserved": "Haki zote zimehifadhiwa.",
+    "privacyPolicy": "Sera ya Faragha",
+    "terms": "Masharti na Masharti",
+    "socialLink": "(inafungua kwenye kichupo kipya)",
+    "subscribe": "Jiandikishe",
+    "subscribing": "Inajisajili",
+    "subscribed": "Umejisajili!"
+  },
+  "navigation": {
+    "home": "Nyumbani",
+    "destinations": "Marudio",
+    "tours": "Safari",
+    "accommodations": "Malazi",
+    "about": "Kuhusu Sisi",
+    "contact": "Mawasiliano",
+    "blog": "Blogu"
+  },
+  "search": {
+    "placeholder": "Tafuta marudio, safari, malazi...",
+    "checkIn": "Ingia",
+    "checkOut": "Toka",
+    "guests": "Wageni",
+    "search": "Tafuta"
+  },
+  "accommodation": {
+    "title": "Malazi",
+    "filter": {
+      "title": "Chuja kwa",
+      "priceRange": "Muda wa bei",
+      "type": "Aina",
+      "amenities": "Vifaa",
+      "rating": "Ukadiriaji"
+    },
+    "sort": {
+      "title": "Panga kwa",
+      "priceLowToHigh": "Bei: Chini kwenda juu",
+      "priceHighToLow": "Bei: Juu kwenda chini",
+      "ratingHighToLow": "Ukadiriaji: Juu kwenda chini",
+      "nameAZ": "Jina: A kwenda Z"
+    },
+    "amenities": {
+      "wifi": "Wifi ya Bure",
+      "pool": "Bwawa la Kuogelea",
+      "restaurant": "Mkahawa",
+      "bar": "Baa",
+      "spa": "Spa",
+      "gym": "Ukumbi wa Mazoezi",
+      "parking": "Maegesho ya Bure",
+      "airConditioning": "Kiyoyozi"
+    },
+    "types": {
+      "hotel": "Hoteli",
+      "lodge": "Lojii",
+      "camp": "Kambi",
+      "resort": "Resorti"
+    },
+    "viewDetails": "Angalia Maelezo",
+    "perNight": "kwa usiku",
+    "reviews": "{{count}} maoni",
+    "noResults": "Hakuna malazi yaliyopatikana"
+  },
+  "common": {
+    "loading": "Inapakia...",
+    "error": "Hitilafu imetokea. Tafadhali jaribu tena baadaye.",
+    "learnMore": "Jifunze Zaidi",
+    "bookNow": "Hifadhi Sasa",
+    "contactUs": "Wasiliana Nasi",
+    "readMore": "Soma Zaidi",
+    "back": "Rudi Nyuma"
+  },
+  "currency": {
+    "usd": "Dola ya Marekani",
+    "tzs": "Shilingi ya Tanzania",
+    "eur": "Yuro",
+    "gbp": "Pauni ya Uingereza"
+  },
+  "language": {
+    "en": "English",
+    "sw": "Kiswahili"
+  }
+}

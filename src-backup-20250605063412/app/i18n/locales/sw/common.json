@@ -1,0 +1,35 @@
+{
+  "header": {
+    "home": "Nyumbani",
+    "tours": "Safari",
+    "destinations": "Marudio",
+    "accommodations": "Malazi",
+    "about": "Kuhusu Sisi",
+    "contact": "Wasiliana Nasi",
+    "bookNow": "Tengeneza Safari"
+  },
+  "language": {
+    "en": "Kiingereza",
+    "sw": "Kiswahili",
+    "de": "Kijerumani"
+  },
+  "currency": {
+    "USD": "Dola ya Marekani",
+    "EUR": "Yuro",
+    "GBP": "Pauni ya Uingereza",
+    "TZS": "Shilingi ya Tanzania"
+  },
+  "common": {
+    "loading": "Inapakia...",
+    "error": "Hitilafu imetokea",
+    "success": "Imefanikiwa",
+    "submit": "Wasilisha",
+    "cancel": "Ghairi",
+    "save": "Hifadhi",
+    "delete": "Futa",
+    "edit": "Hariri",
+    "view": "Angalia",
+    "search": "Tafuta",
+    "noResults": "Hakuna matokeo yaliyopatikana"
+  }
+}

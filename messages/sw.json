@@ -1,0 +1,71 @@
+{
+  "Index": {
+    "title": "Karibu Nyika Safaris",
+    "description": "Pata uzoefu bora wa safari barani Afrika"
+  },
+  "Navigation": {
+    "home": "Nyumbani",
+    "tours": "Safari",
+    "destinations": "Marudio",
+    "accommodations": "Malazi",
+    "blog": "Blogu",
+    "contact": "Mawasiliano",
+    "dashboard": "Dashibodi",
+    "signIn": "Ingia",
+    "signOut": "Toka",
+    "menuToggle": "Fungua menyu",
+    "themeToggle": "Badilisha mada"
+  },
+  "Auth": {
+    "signIn": "Ingia",
+    "signOut": "Toka",
+    "register": "Jisajili",
+    "forgotPassword": "Umesahau nenosiri?"
+  },
+  "ContactPage": {
+    "title": "Wasiliana Nasi",
+    "description": "Wasiliana na timu yetu kwa maswali yoyote au usaidizi wa kufanya maagizo.",
+    "form": {
+      "name": "Jina Lako",
+      "email": "Barua Pepe",
+      "phone": "Nambari ya Simu",
+      "subject": "Mada",
+      "message": "Ujumbe Wako",
+      "submit": "Tuma Ujumbe",
+      "success": "Asante kwa ujumbe wako! Tutawasiliana nawe hivi karibuni.",
+      "error": "Kumekuwa na hitilafu katika kutuma ujumbe wako. Tafadhali jaribu tena baadaye."
+    }
+  },
+  "Common": {
+    "loading": "Inapakia...",
+    "error": "Hitilafu imetokea",
+    "success": "Imefanikiwa",
+    "submit": "Wasilisha",
+    "cancel": "Ghairi",
+    "back": "Rudi",
+    "next": "Inayofuata",
+    "previous": "Iliyopita",
+    "search": "Tafuta"
+  },
+  "Dashboard": {
+    "title": "Dashibodi",
+    "welcome": "Karibu kwenye dashibodi, {email}!",
+    "welcomeCard": {
+      "title": "Karibu Kwenye Dashibodi Yako"
+    },
+    "signOut": "Toka",
+    "quickActions": {
+      "title": "Vitendo Haraka",
+      "editProfile": "Hariri Wasifu",
+      "viewBookings": "Angalia Ajira Zako",
+      "savedTours": "Safari Zilizohifadhiwa"
+    },
+    "profile": {
+      "title": "Wasifu Wako",
+      "name": "Jina",
+      "email": "Barua Pepe",
+      "role": "Jukumu",
+      "notProvided": "Haijatolewa"
+    }
+  }
+}

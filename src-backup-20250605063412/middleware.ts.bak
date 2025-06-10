@@ -1,0 +1,256 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { getToken } from 'next-auth/jwt';
+
+// Define i18n settings to match next.config.js
+const locales = ['en', 'sw', 'de'] as const;
+const fallbackLng = 'en' as const;
+
+// Debug logging
+const debug = process.env.NODE_ENV === 'development' ? console.log : () => {};
+
+// Default redirect path after sign in
+const DEFAULT_SIGNIN_REDIRECT = '/dashboard';
+
+// Path to redirect to if the user is not authenticated
+const UNAUTHENTICATED_REDIRECT = '/auth/signin';
+
+// Path to redirect to if the user is authenticated but trying to access auth pages
+const AUTH_PAGES = ['/auth/signin', '/auth/register', '/auth/forgot-password', '/auth/reset-password'];
+
+// Role-based redirects
+const ROLE_REDIRECTS: Record<string, string> = {
+  admin: '/admin',
+  user: '/dashboard',
+};
+
+// List of pathnames that should be excluded from i18n routing and auth checks
+const excludePaths = [
+  '/api',
+  '/_next',
+  '/favicon.ico',
+  '/sitemap.xml',
+  '/robots.txt',
+  '/images',
+  '/icons',
+  '/fonts',
+  '/locales',
+  '/_vercel',
+];
+
+// List of public paths that don't require authentication
+const publicPathPatterns = [
+  // Root path with or without locale
+  /^\/?$/,  // Matches /
+  /^\/(en|sw|de)\/?$/,  // Matches /en, /sw/, /de/
+  
+  // Public pages with locale prefix
+  /^\/(en|sw|de)\/(tours|attractions|accommodations|blog|about|contact|privacy-policy|terms-of-service|destinations|auth)(\/.*)?$/,
+  
+  // Public pages without locale prefix (will be redirected)
+  /^\/(tours|attractions|accommodations|blog|about|contact|privacy-policy|terms-of-service|destinations|auth)(\/.*)?$/,
+  
+  // API routes
+  /^\/api\/.*$/,
+  
+  // Static files
+  /^\.(ico|jpg|jpeg|png|svg|css|js|json|webp|woff|woff2|ttf|eot|mp4|webm|mp3|wav|pdf|zip|gz|txt|xml)$/i,
+  /^\/_next\//,
+  /^\/images\//,
+  /^\/fonts\//,
+  /^\/locales\//
+];
+
+// Check if a path is public
+function isPublicPath(pathname: string): boolean {
+  const isPublic = publicPathPatterns.some(pattern => {
+    const isMatch = pattern.test(pathname);
+    if (isMatch) {
+      debug(`[middleware] Path ${pathname} matched public pattern: ${pattern}`);
+    }
+    return isMatch;
+  });
+  
+  debug(`[middleware] isPublicPath(${pathname}): ${isPublic}`);
+  return isPublic;
+}
+
+// File types to ignore
+const IGNORED_EXTENSIONS = [
+  '.jpg', '.jpeg', '.png', '.svg', '.ico', '.webp',
+  '.woff', '.woff2', '.ttf', '.eot',
+  '.mp4', '.webm', '.mp3', '.wav',
+  '.pdf', '.zip', '.gz', '.txt', '.xml', '.json',
+  '.css', '.js', '.map',
+];
+
+export async function middleware(request: NextRequest) {
+  const { pathname, searchParams } = request.nextUrl;
+  const token = await getToken({ req: request });
+  const isAuthenticated = !!token;
+  const locale = request.cookies.get('NEXT_LOCALE')?.value || fallbackLng;
+  
+  debug('Middleware processing:', { pathname, isAuthenticated, locale });
+  
+  // Handle root path redirection first
+  if (pathname === '/') {
+    // Get the preferred locale from cookies or accept-language header
+    const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
+    const acceptLanguage = request.headers.get('accept-language');
+    
+    // Type assertion to ensure we're working with the correct locale type
+    type Locale = typeof locales[number];
+    let preferredLocale: Locale = fallbackLng;
+    
+    // 1. Check cookie first
+    if (cookieLocale && locales.includes(cookieLocale as Locale)) {
+      preferredLocale = cookieLocale as Locale;
+    } 
+    // 2. Then check Accept-Language header
+    else if (acceptLanguage) {
+      const preferredLang = acceptLanguage.split(',')[0].split('-')[0] as Locale;
+      if (locales.includes(preferredLang)) {
+        preferredLocale = preferredLang;
+      }
+    }
+    
+    // Create URL with locale and preserve any query parameters
+    const url = new URL(`/${preferredLocale}`, request.url);
+    
+    // Ensure we have a trailing slash for consistency
+    if (!url.pathname.endsWith('/')) {
+      url.pathname = `${url.pathname}/`;
+    }
+    
+    debug(`[middleware] Redirecting root to: ${url.toString()}`);
+    return NextResponse.redirect(url);
+  }
+  
+  // Handle i18n - check if the path starts with a valid locale
+  const pathLocale = locales.find(
+    (loc) => pathname === `/${loc}` || pathname.startsWith(`/${loc}/`)
+  );
+  
+  const currentLocale = pathLocale || locale || fallbackLng;
+
+  // Skip middleware for public paths, static files, and API routes
+  if (isPublicPath(pathname)) {
+    debug(`[middleware] Path is public: ${pathname}`);
+    return NextResponse.next();
+  }
+  
+  // Skip middleware for excluded paths
+  if (excludePaths.some(path => pathname.startsWith(path))) {
+    debug(`[middleware] Path is excluded: ${pathname}`);
+    return NextResponse.next();
+  }
+  
+  // Skip middleware for static files and API routes
+  if (
+    pathname.startsWith('/api/') ||
+    pathname === '/api' ||
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/images/') ||
+    pathname.startsWith('/fonts/') ||
+    pathname.startsWith('/locales/') ||
+    pathname.match(/\.(ico|jpg|jpeg|png|svg|css|js|json|webp|woff|woff2|ttf|eot|mp4|webm|mp3|wav|pdf|zip|gz|txt|xml)$/i)
+  ) {
+    debug(`[middleware] Skipping middleware for static/API path: ${pathname}`);
+    return NextResponse.next();
+  }
+  
+  // Only process i18n if not an API route and not already processed
+  if (!pathname.startsWith('/api/') && pathname !== '/api' && !pathLocale) {
+    const pathnameIsMissingLocale = locales.every(
+      (loc) => !pathname.startsWith(`/${loc}/`) && pathname !== `/${loc}`
+    );
+
+    if (pathnameIsMissingLocale && !pathname.startsWith('/_next')) {
+      const newPath = `/${currentLocale}${pathname === '/' ? '' : pathname}`;
+      return NextResponse.redirect(new URL(newPath, request.url));
+    }
+  }
+
+  // Check if the current path is an auth page
+  const isAuthPage = AUTH_PAGES.some(path => {
+    const fullPath = `/${currentLocale}${path}`;
+    return pathname === fullPath || pathname === path || 
+           pathname.endsWith(path) ||
+           pathname.includes(`/${currentLocale}${path}`);
+  });
+
+  // Handle public paths
+  if (isPublicPath(pathname) || isAuthPage) {
+    // If user is authenticated and trying to access an auth page, redirect to dashboard
+    if (isAuthPage && isAuthenticated) {
+      let callbackUrl = searchParams.get('callbackUrl');
+      
+      // If no callback URL, use role-based redirect
+      if (!callbackUrl) {
+        const roleBasedUrl = ROLE_REDIRECTS[token?.role as string] || DEFAULT_SIGNIN_REDIRECT;
+        // Ensure the role-based URL has the correct locale prefix
+        callbackUrl = roleBasedUrl.startsWith(`/${currentLocale}/`) 
+          ? roleBasedUrl 
+          : `/${currentLocale}${roleBasedUrl.startsWith('/') ? '' : '/'}${roleBasedUrl}`;
+      } else {
+        // Ensure the callback URL has the correct locale prefix
+        if (!callbackUrl.startsWith(`/${currentLocale}/`) && !callbackUrl.startsWith('/api/')) {
+          callbackUrl = `/${currentLocale}${callbackUrl.startsWith('/') ? '' : '/'}${callbackUrl}`;
+        }
+      }
+        
+      const redirectUrl = new URL(callbackUrl, request.url);
+      debug('Redirecting authenticated user from auth page to:', redirectUrl.toString());
+      return NextResponse.redirect(redirectUrl);
+    }
+    
+    // For public paths or auth pages (when not authenticated), continue
+    return NextResponse.next();
+  }
+
+  // Handle protected routes (not public and not auth pages)
+  if (!isAuthenticated) {
+    // If not authenticated and trying to access a protected page, redirect to signin
+    const signInUrl = new URL(`/${currentLocale}${UNAUTHENTICATED_REDIRECT}`, request.url);
+    signInUrl.searchParams.set('callbackUrl', `/${currentLocale}${pathname}`);
+    return NextResponse.redirect(signInUrl);
+  }
+
+  // Handle role-based access control for authenticated users
+  if (pathname.startsWith(`/${currentLocale}/admin`) && token?.role !== 'admin') {
+    const redirectUrl = new URL(`/${currentLocale}/unauthorized`, request.url);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  // Continue with the request
+  const response = NextResponse.next();
+  
+  // Set security headers
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+
+  return response;
+}
+
+// Match all paths except static files and API routes
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for:
+     * - /_next/static (static files)
+     * - /_next/image (image optimization files)
+     * - /favicon.ico (favicon file)
+     * - /public (public files)
+     * - /api (API routes)
+     * - /images (image files)
+     * - /fonts (font files)
+     * - /locales (translation files)
+     * - /sitemap.xml (sitemap)
+     * - /robots.txt (robots file)
+     */
+    '/((?!_next/static|_next/image|favicon\.ico|public|api|images|fonts|locales|sitemap\.xml|robots\.txt|.*\.[a-z0-9]+$).*)',
+  ],
+};

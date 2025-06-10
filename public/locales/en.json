@@ -1,0 +1,58 @@
+{
+  "Index": {
+    "title": "Welcome to Nyika Safaris",
+    "description": "Experience the best safaris in Africa",
+    "navigation": "Site Navigation"
+  },
+  "Navigation": {
+    "home": "Home",
+    "tours": "Tours",
+    "destinations": "Destinations",
+    "accommodations": "Accommodations",
+    "blog": "Blog",
+    "contact": "Contact",
+    "dashboard": "Dashboard",
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "menuToggle": "Toggle menu",
+    "themeToggle": "Toggle theme"
+  },
+  "Auth": {
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "register": "Register",
+    "forgotPassword": "Forgot Password?"
+  },
+  "Common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search"
+  },
+  "Dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome to the dashboard, {email}!",
+    "welcomeCard": {
+      "title": "Welcome to Your Dashboard"
+    },
+    "signOut": "Sign Out",
+    "quickActions": {
+      "title": "Quick Actions",
+      "editProfile": "Edit Profile",
+      "viewBookings": "View Bookings",
+      "savedTours": "Saved Tours"
+    },
+    "profile": {
+      "title": "Your Profile",
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "notProvided": "Not provided"
+    }
+  }
+}

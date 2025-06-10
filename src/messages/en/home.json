@@ -1,0 +1,53 @@
+{
+  "heroTitle": "Experience the",
+  "heroHighlight": "Wild Beauty of Africa",
+  "heroDescription": "Embark on an unforgettable journey through the heart of Africa. Discover breathtaking landscapes, majestic wildlife, and rich cultures.",
+  "heroImageAlt": "African savanna at sunset with wildlife",
+  "ctaPrimary": "Book Your Safari",
+  "ctaSecondary": "Learn More",
+  
+  "featuresTitle": "Why Choose Us",
+  "featuresSubtitle": "A Safari Experience Like No Other",
+  "featuresDescription": "We offer personalized safari experiences that go beyond the ordinary. Here's what sets us apart:",
+  
+  "features": {
+    "1": {
+      "title": "Expert Guides",
+      "description": "Our experienced guides have in-depth knowledge of African wildlife and ecosystems."
+    },
+    "2": {
+      "title": "Luxury Accommodations",
+      "description": "Stay in handpicked lodges and camps that combine comfort with authentic African charm."
+    },
+    "3": {
+      "title": "Sustainable Tourism",
+      "description": "We're committed to responsible tourism that supports local communities and conservation."
+    },
+    "4": {
+      "title": "Tailored Itineraries",
+      "description": "Customized safari experiences designed to match your interests and preferences."
+    }
+  },
+  
+  "testimonials": {
+    "title": "What Our Travelers Say",
+    "subtitle": "Don't just take our word for it. Here's what our guests have to say about their experiences.",
+    "items": {
+      "1": {
+        "text": "The best safari experience of our lives! The guides were incredibly knowledgeable and made sure we saw the Big Five.",
+        "name": "Sarah Johnson",
+        "role": "Adventure Seeker"
+      },
+      "2": {
+        "text": "Nyika Safaris went above and beyond to create a personalized itinerary for our family. The kids are still talking about it!",
+        "name": "Michael Chen",
+        "role": "Family Traveler"
+      },
+      "3": {
+        "text": "As a solo female traveler, I felt completely safe and well taken care of throughout my journey. Highly recommend!",
+        "name": "Amina Bello",
+        "role": "Solo Traveler"
+      }
+    }
+  }
+}

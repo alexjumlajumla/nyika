@@ -1,0 +1,74 @@
+{
+  "navigation": {
+    "home": "Nyumbani",
+    "destinations": "Marudio",
+    "tours": "Safari",
+    "accommodations": "Malazi",
+    "about": "Kuhusu Sisi",
+    "contact": "Mawasiliano",
+    "blog": "Blogu"
+  },
+  "search": {
+    "placeholder": "Tafuta marudio, safari, malazi...",
+    "checkIn": "Ingia",
+    "checkOut": "Toka",
+    "guests": "Wageni",
+    "search": "Tafuta"
+  },
+  "accommodation": {
+    "title": "Malazi",
+    "filter": {
+      "title": "Chuja kwa",
+      "priceRange": "Muda wa bei",
+      "type": "Aina",
+      "amenities": "Vifaa",
+      "rating": "Ukadiriaji"
+    },
+    "sort": {
+      "title": "Panga kwa",
+      "priceLowToHigh": "Bei: Chini kwenda juu",
+      "priceHighToLow": "Bei: Juu kwenda chini",
+      "ratingHighToLow": "Ukadiriaji: Juu kwenda chini",
+      "nameAZ": "Jina: A kwenda Z"
+    },
+    "amenities": {
+      "wifi": "Wifi ya Bure",
+      "pool": "Bwawa la Kuogelea",
+      "restaurant": "Mkahawa",
+      "bar": "Baa",
+      "spa": "Spa",
+      "gym": "Ukumbi wa Mazoezi",
+      "parking": "Maegesho ya Bure",
+      "airConditioning": "Kiyoyozi"
+    },
+    "types": {
+      "hotel": "Hoteli",
+      "lodge": "Lojii",
+      "camp": "Kambi",
+      "resort": "Resorti"
+    },
+    "viewDetails": "Angalia Maelezo",
+    "perNight": "kwa usiku",
+    "reviews": "{{count}} maoni",
+    "noResults": "Hakuna malazi yaliyopatikana"
+  },
+  "common": {
+    "loading": "Inapakia...",
+    "error": "Hitilafu imetokea. Tafadhali jaribu tena baadaye.",
+    "learnMore": "Jifunze Zaidi",
+    "bookNow": "Hifadhi Sasa",
+    "contactUs": "Wasiliana Nasi",
+    "readMore": "Soma Zaidi",
+    "back": "Rudi Nyuma"
+  },
+  "currency": {
+    "usd": "Dola ya Marekani",
+    "tzs": "Shilingi ya Tanzania",
+    "eur": "Yuro",
+    "gbp": "Pauni ya Uingereza"
+  },
+  "language": {
+    "en": "English",
+    "sw": "Kiswahili"
+  }
+}

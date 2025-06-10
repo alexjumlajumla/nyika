@@ -1,0 +1,156 @@
+{
+  "Common": {
+    "readMore": "Read More",
+    "bookNow": "Book Now",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "exploreTours": "Explore Our Tours",
+    "contactUs": "Contact Us"
+  },
+  "home": {
+    "title": "Nyika Safaris",
+    "subtitle": "Experience the best safaris in Africa",
+    "cta": "Explore Our Tours",
+    "featuredTours": "Featured Tours"
+  },
+  "navigation": {
+    "home": "Home",
+    "tours": "Tours",
+    "destinations": "Destinations",
+    "accommodations": "Accommodations",
+    "about": "About Us",
+    "contact": "Contact"
+  },
+  "common": {
+    "readMore": "Read More",
+    "bookNow": "Book Now",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "exploreTours": "Explore Our Tours",
+    "contactUs": "Contact Us"
+  },
+  "HomePage": {
+    "title": "Discover the Magic of Africa",
+    "description": "Experience the ultimate luxury safari adventure with Nyika Safaris. Explore breathtaking landscapes and encounter majestic wildlife in their natural habitat.",
+    "heroImageAlt": "African Safari Landscape"
+  },
+  "LocaleSwitcher": {
+    "switchLanguage": "Switch language",
+    "languages": {
+      "en": "English",
+      "sw": "Kiswahili"
+    }
+  },
+  "DestinationsPage": {
+    "title": "Our Destinations",
+    "description": "Explore the most breathtaking destinations in Africa",
+    "noResults": "No destinations found",
+    "loading": "Loading destinations...",
+    "error": "Failed to load destinations. Please try again later.",
+    "explore": "Explore {name}",
+    "viewAll": "View All Destinations",
+    "featured": "Featured Destinations",
+    "popular": "Popular Destinations",
+    "all": "All Destinations"
+  },
+  "tours": {
+    "title": "Our Tours",
+    "description": "Discover our curated selection of unforgettable safari experiences",
+    "noResults": "No tours found",
+    "loading": "Loading tours...",
+    "error": "Failed to load tours. Please try again later.",
+    "filters": {
+      "search": "Search tours...",
+      "destinations": "Destinations",
+      "durations": "Durations",
+      "priceRange": "Price Range",
+      "ratings": "Ratings",
+      "applyFilters": "Apply Filters",
+      "resetFilters": "Reset Filters",
+      "showFilters": "Show Filters",
+      "hideFilters": "Hide Filters"
+    },
+    "sort": {
+      "label": "Sort by",
+      "priceLowToHigh": "Price: Low to High",
+      "priceHighToLow": "Price: High to Low",
+      "durationShortToLong": "Duration: Short to Long",
+      "durationLongToShort": "Duration: Long to Short",
+      "ratingHighToLow": "Rating: High to Low",
+      "newestFirst": "Newest First"
+    },
+    "tourCard": {
+      "days": "{count, plural, one {day} other {days}}",
+      "nights": "{count, plural, one {night} other {nights}}",
+      "fromPrice": "From",
+      "perPerson": "per person",
+      "viewDetails": "View Details",
+      "groupSize": "Group size: {min}-{max} people",
+      "difficulty": "Difficulty: {level}",
+      "departure": "Departure: {location}"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {current} of {total}",
+      "showing": "Showing {start}-{end} of {total} tours"
+    }
+  },
+  "ContactPage": {
+    "title": "Contact Us",
+    "description": "Get in touch with our team for any inquiries or to book your next adventure.",
+    "form": {
+      "name": "Your Name",
+      "email": "Email Address",
+      "phone": "Phone Number",
+      "subject": "Subject",
+      "message": "Your Message",
+      "submit": "Send Message",
+      "success": "Thank you for your message! We'll get back to you soon.",
+      "error": "There was an error sending your message. Please try again later.",
+      "required": "This field is required",
+      "invalidEmail": "Please enter a valid email address"
+    },
+    "contactInfo": {
+      "title": "Contact Information",
+      "address": "123 Safari Lane, Nairobi, Kenya",
+      "phone": "+254 700 000000",
+      "email": "info@nyikasafaris.com",
+      "hours": "Monday - Friday: 9:00 AM - 5:00 PM"
+    }
+  },
+  "AccommodationsPage": {
+    "title": "Our Accommodations",
+    "description": "Discover our handpicked selection of premium accommodations across Africa",
+    "noResults": "No accommodations found",
+    "loading": "Loading accommodations...",
+    "error": "Failed to load accommodations. Please try again later.",
+    "filters": {
+      "all": "All",
+      "hotel": "Hotels",
+      "lodge": "Lodges",
+      "camp": "Camps",
+      "priceRange": "Price Range",
+      "sortBy": "Sort By",
+      "sortOptions": {
+        "price_asc": "Price: Low to High",
+        "price_desc": "Price: High to Low",
+        "rating_desc": "Highest Rated",
+        "name_asc": "Name (A-Z)",
+        "name_desc": "Name (Z-A)"
+      }
+    },
+    "amenities": {
+      "wifi": "Free WiFi",
+      "pool": "Swimming Pool",
+      "spa": "Spa",
+      "restaurant": "Restaurant",
+      "bar": "Bar",
+      "gym": "Gym",
+      "parking": "Free Parking",
+      "airportShuttle": "Airport Shuttle",
+      "familyRooms": "Family Rooms",
+      "petFriendly": "Pet Friendly"
+    }
+  }
+}

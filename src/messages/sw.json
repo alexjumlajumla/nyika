@@ -1,0 +1,99 @@
+{
+  "Common": {
+    "readMore": "Soma Zaidi",
+    "bookNow": "Hifadhi Sasa",
+    "loading": "Inapakia...",
+    "error": "Hitilafu imetokea",
+    "exploreTours": "Tazama Safari Zetu",
+    "contactUs": "Wasiliana Nasi"
+  },
+  "home": {
+    "title": "Safari za Nyika",
+    "subtitle": "Pata uzoefi bora wa safari barani Afrika",
+    "cta": "Tazama Safari Zetu",
+    "featuredTours": "Safari Zilizochaguliwa"
+  },
+  "navigation": {
+    "home": "Nyumbani",
+    "tours": "Safari",
+    "destinations": "Viwango",
+    "accommodations": "Malazi",
+    "about": "Kuhusu Sisi",
+    "contact": "Wasiliana Nasi"
+  },
+  "common": {
+    "readMore": "Soma Zaidi",
+    "bookNow": "Hifadhi Sasa",
+    "loading": "Inapakia...",
+    "error": "Hitilafu imetokea",
+    "exploreTours": "Tazama Safari Zetu",
+    "contactUs": "Wasiliana Nasi"
+  },
+  "HomePage": {
+    "title": "Gundua Uzuri wa Afrika",
+    "description": "Pata uzoefi wa safari ya kifahari zaidi na Nyika Safaris. Tembelea mandhari ya kuvutia na kukutana na wanyama wa porini katika makazi yao ya asili.",
+    "heroImageAlt": "Mandhari ya Safari ya Kiafrika"
+  },
+  "LocaleSwitcher": {
+    "switchLanguage": "Badilisha lugha",
+    "languages": {
+      "en": "Kiingereza",
+      "sw": "Kiswahili"
+    }
+  },
+  "DestinationsPage": {
+    "title": "Viwango Vyetu",
+    "description": "Tembelea maeneo ya kuvutia zaidi barani Afrika",
+    "noResults": "Hakuna viwango vilivyopatikana",
+    "loading": "Inapakia viwango...",
+    "error": "Imeshindwa kupakia viwango. Tafadhali jaribu tena baadaye.",
+    "explore": "Tembelea {name}",
+    "viewAll": "Tazama Viwango Vyote",
+    "featured": "Viwango Vilivyochaguliwa",
+    "popular": "Viwango Vya Maarufu",
+    "all": "Viwango Vyote"
+  },
+  "tours": {
+    "title": "Safari Zetu",
+    "description": "Gundua uteuzi wetu wa safari zisizosahaulika",
+    "noResults": "Hakuna safari zilizopatikana",
+    "loading": "Inapakia safari...",
+    "error": "Imeshindwa kupakia safari. Tafadhali jaribu tena baadaye.",
+    "filters": {
+      "search": "Tafuta safari...",
+      "destinations": "Viwango",
+      "durations": "Muda",
+      "priceRange": "Bei",
+      "ratings": "Ukadiriaji",
+      "applyFilters": "Tumia Vichujio",
+      "resetFilters": "Safisha Vichujio",
+      "showFilters": "Onyesha Vichujio",
+      "hideFilters": "Ficha Vichujio"
+    },
+    "sort": {
+      "label": "Panga kwa",
+      "priceLowToHigh": "Bei: Chini kwenda Juu",
+      "priceHighToLow": "Bei: Juu kwenda Chini",
+      "durationShortToLong": "Muda: Fupi kwenda Refu",
+      "durationLongToShort": "Muda: Refu kwenda Fupi",
+      "ratingHighToLow": "Ukadiriaji: Juu kwenda Chini",
+      "newestFirst": "Mpya Zaidi Kwanza"
+    },
+    "tourCard": {
+      "days": "{count, plural, one {siku} other {siku}}",
+      "nights": "{count, plural, one {usiku} other {usiku}}",
+      "fromPrice": "Kutoka",
+      "perPerson": "kwa mtu",
+      "viewDetails": "Angalia Maelezo",
+      "groupSize": "Ukubwa wa kikundi: {min}-{max} watu",
+      "difficulty": "Uzito: {level}",
+      "departure": "Kuondoka: {location}"
+    },
+    "pagination": {
+      "previous": "Iliyopita",
+      "next": "Inayofuata",
+      "page": "Ukurasa {current} wa {total}",
+      "showing": "Inaonyesha {start}-{end} kati ya {total} za safari"
+    }
+  }
+}
