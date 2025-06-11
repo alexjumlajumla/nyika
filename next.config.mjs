@@ -1,147 +1,93 @@
-import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
+import withNextIntl from 'next-intl/plugin';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
+// Get the directory name in ES module
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = path.dirname(__filename);
+
+const withNextIntlConfig = withNextIntl(
+  // Path to the internationalization configuration
+  './src/i18n/config.ts',
+  // Optional: enable automatic static optimization for pages
+  {
+    // Enable automatic static optimization for all pages
+    // This is the default in production
+    // Set to 'force-dynamic' to disable static optimization
+    // for pages that use dynamic features
+    // forceDynamic: true,
+  }
+);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  
-  // Configure images
-  images: {
-    domains: [
-      'localhost',
-      'your-supabase-url.supabase.co',
-      'images.unsplash.com',
-      'source.unsplash.com',
-      'lh3.googleusercontent.com',
-      '*.googleusercontent.com',
-      '*.supabase.co',
-      '*.supabase.in',
-    ],
-    formats: ['image/avif', 'image/webp'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60,
-    dangerouslyAllowSVG: true,
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-  },
-  
-  // Configure webpack
-  webpack: (config, { isServer, dev, webpack }) => {
-    // Add an alias for the messages directory
+  // i18n configuration is handled by next-intl
+  // Add any other Next.js config options here
+  output: 'standalone',
+  webpack: (config) => {
+    // Add path aliases
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@/messages': resolve(__dirname, 'src/messages'),
-      '@/lib': resolve(__dirname, 'src/lib'),
-      '@/components': resolve(__dirname, 'src/components'),
-      '@/styles': resolve(__dirname, 'src/styles'),
-      '@/public': resolve(__dirname, 'public'),
+      '@': path.resolve(__dirname, './src'),
+      '@/components': path.resolve(__dirname, './src/components'),
+      '@/lib': path.resolve(__dirname, './src/lib'),
+      '@/styles': path.resolve(__dirname, './src/styles'),
+      '@/types': path.resolve(__dirname, './src/types'),
+      '@/app': path.resolve(__dirname, './src/app'),
+      '@/messages': path.resolve(__dirname, './src/messages'),
+      '@/config': path.resolve(__dirname, './src/config')
     };
-    
-    // Add file loader for images (only in development)
-    if (dev && !isServer) {
-      config.module.rules.push({
-        test: /\.(png|jpe?g|gif|svg|webp|avif)$/i,
-        use: [
-          {
-            loader: 'file-loader',
-            options: {
-              publicPath: '/_next',
-              name: 'static/media/[name].[hash:8].[ext]',
-              esModule: false,
-            },
-          },
-        ],
-      });
-    }
-
-    // Add support for .node files
-    config.module.rules.push({
-      test: /\.node$/,
-      use: 'node-loader',
-    });
-
-    // Add support for WebAssembly
-    config.experiments = {
-      ...config.experiments,
-      asyncWebAssembly: true,
-      layers: true,
-      topLevelAwait: true,
-    };
-
-    // Add support for Web Workers
-    config.output.webassemblyModuleFilename = 'static/wasm/[modulehash].wasm';
-    config.output.publicPath = '/_next/';
-
     return config;
   },
-  
-  // Enable source maps in production for better error tracking
-  productionBrowserSourceMaps: true,
-  
-  // Configure headers
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'source.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'plus.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 's3.amazonaws.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
+      },
+    ],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+  },
+  // Enable cross-origin resource sharing (CORS)
   async headers() {
     return [
       {
         source: '/(.*)',
         headers: [
           {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
           },
         ],
       },
     ];
   },
-  
-  // Configure redirects
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/en', // Default to English
-        permanent: false,
-        locale: false,
-      },
-    ];
-  },
-  
-  // Configure rewrites for API routes
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: '/api/:path*',
-      },
-    ];
-  },
-  
-  // Configure page extensions
-  pageExtensions: ['tsx', 'ts', 'jsx', 'js', 'mdx'],
-  
-  // Configure trailing slash
-  trailingSlash: false,
-  
-  // Configure powered by header
-  poweredByHeader: false,
 };
 
-export default nextConfig;
+export default withNextIntlConfig(nextConfig);

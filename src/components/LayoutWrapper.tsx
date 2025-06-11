@@ -4,6 +4,7 @@ import { AuthProvider } from '@/providers/AuthProvider';
 import { CurrencyProvider } from '@/contexts/CurrencyProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import { Header } from '@/components/layout/Header';
+import { BookingConfirmationModal } from '@/components/booking/BookingConfirmationModal';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -48,6 +49,7 @@ export function LayoutWrapper({ children }: LayoutWrapperProps) {
             <main className="min-h-[calc(100vh-4rem)] bg-background">
               {children}
             </main>
+            <BookingConfirmationModal />
             <Footer />
           </div>
         </CurrencyProvider>

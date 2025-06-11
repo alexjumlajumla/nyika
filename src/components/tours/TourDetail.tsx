@@ -1,17 +1,18 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
-import { ChevronLeft, ChevronRight, MapPin, Clock, Star, Plus, Minus, X, Calendar as CalendarIcon, Check, Loader2 } from 'lucide-react';
+import { useState, useCallback } from 'react';
+// Router import removed as it's no longer needed in this component
+import { ChevronLeft, ChevronRight, MapPin, Clock, Star, Plus, Minus, X, Calendar as CalendarIcon, Check } from 'lucide-react';
+import { useBookingStore } from '@/store/booking';
+import { BookingConfirmationModal } from '@/components/booking/BookingConfirmationModal';
 // Date picker component will be implemented separately
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import TourCard from './TourCard';
 import dynamic from 'next/dynamic';
@@ -59,22 +60,33 @@ interface TourDetailProps {
 }
 
 export const TourDetail = ({ tour, similarTours = [] }: TourDetailProps) => {
+  // State management
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-
-  const [isProcessing, setIsProcessing] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [guests, setGuests] = useState(1);
-  const [bookingDetails, setBookingDetails] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    specialRequests: ''
-  });
-
+  
+  // Booking store
+  const { setBooking, openModal } = useBookingStore();
+  
+  // Calculate prices
   const subtotal = tour.price * guests;
   const serviceFee = Math.round(tour.price * guests * 0.1); // 10% service fee
   const totalPrice = subtotal + serviceFee;
+  
+  // Handle booking
+  const handleBookNow = useCallback(() => {
+    // Set booking data in the store
+    setBooking({
+      tour,
+      date: selectedDate?.toISOString() || new Date().toISOString(),
+      guests,
+      totalPrice,
+      serviceFee,
+    });
+    
+    // Open the booking modal
+    openModal();
+  }, [tour, selectedDate, guests, totalPrice, serviceFee, setBooking, openModal]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -83,31 +95,6 @@ export const TourDetail = ({ tour, similarTours = [] }: TourDetailProps) => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(price);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setBookingDetails(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleBookingSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsProcessing(true);
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setIsBookingModalOpen(false);
-      setBookingDetails({
-        fullName: '',
-        email: '',
-        phone: '',
-        specialRequests: ''
-      });
-      setGuests(1);
-      setSelectedDate(new Date());
-    } finally {
-      setIsProcessing(false);
-    }
   };
 
   const handleDateSelect = (date: Date | undefined) => {
@@ -195,19 +182,6 @@ export const TourDetail = ({ tour, similarTours = [] }: TourDetailProps) => {
         </div>
       </div>
     );
-  };
-
-  const handleBookNow = () => {
-    const bookingData = {
-      tour,
-      date: selectedDate,
-      guests,
-      totalPrice,
-      subtotal: tour.price * guests,
-      serviceFee,
-    };
-    sessionStorage.setItem('currentBooking', JSON.stringify(bookingData));
-    window.location.href = `/tours/${tour.id}/book`;
   };
 
   const renderSimilarTours = () => {
@@ -367,7 +341,10 @@ export const TourDetail = ({ tour, similarTours = [] }: TourDetailProps) => {
                 </div>
               </CardHeader>
               <CardContent className="p-6 flex-1 flex flex-col">
-                <form onSubmit={handleBookingSubmit} className="space-y-4 flex-1 flex flex-col">
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  handleBookNow();
+                }} className="space-y-4 flex-1 flex flex-col">
                   <div>
                     <Label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
                       Select Date
@@ -437,17 +414,11 @@ export const TourDetail = ({ tour, similarTours = [] }: TourDetailProps) => {
                     </div>
 
                     <Button 
-                      type="submit" 
-                      className="w-full bg-primary hover:bg-primary/90 text-white h-12 text-lg"
-                      disabled={isProcessing}
-                      onClick={handleBookNow}
+                      onClick={handleBookNow} 
+                      className="w-full md:w-auto"
+                      size="lg"
                     >
-                      {isProcessing ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Processing...
-                        </>
-                      ) : 'Book Now'}
+                      Book Now
                     </Button>
                   </div>
                 </form>
@@ -527,78 +498,8 @@ export const TourDetail = ({ tour, similarTours = [] }: TourDetailProps) => {
         {renderSimilarTours()}
       </div>
 
-      {/* Booking Modal */}
-      <Dialog open={isBookingModalOpen} onOpenChange={setIsBookingModalOpen}>
-        <DialogContent className="sm:max-w-[500px] mt-[144px] sm:mt-[164px]">
-          <DialogHeader>
-            <DialogTitle>Book Your Tour</DialogTitle>
-            <DialogDescription>
-              Fill in your details to complete your booking.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleBookingSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input
-                id="fullName"
-                name="fullName"
-                value={bookingDetails.fullName}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={bookingDetails.email}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                name="phone"
-                type="tel"
-                value={bookingDetails.phone}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="specialRequests">Special Requests (Optional)</Label>
-              <textarea
-                id="specialRequests"
-                name="specialRequests"
-                rows={3}
-                value={bookingDetails.specialRequests}
-                onChange={handleInputChange}
-                className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-              />
-            </div>
-            <div className="space-y-2 pt-4">
-              <div className="flex justify-between">
-                <span>Total Amount:</span>
-                <span>{formatPrice(totalPrice)}</span>
-              </div>
-              <Button type="submit" className="w-full" disabled={isProcessing}>
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  'Confirm Booking'
-                )}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Booking Confirmation Modal */}
+      <BookingConfirmationModal />
     </div>
   );
 };

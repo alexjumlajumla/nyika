@@ -122,6 +122,85 @@ export async function getTours(): Promise<Tour[]> {
   } as Tour));
 }
 
+export async function getTourById(id: string): Promise<Tour | null> {
+  const supabase = await createServerClient();
+  
+  // First, fetch the tour by ID
+  const { data: tour, error } = await supabase
+    .from('tours')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error || !tour) {
+    logger.error('Error fetching tour by ID:', error);
+    return null;
+  }
+
+  // Fetch related data (categories, destinations, etc.)
+  const [categoriesData, destinationsData] = await Promise.all([
+    supabase
+      .from('tour_category_relations')
+      .select(`
+        category:categories!inner(
+          id,
+          name,
+          slug,
+          description
+        )
+      `)
+      .eq('tour_id', tour.id),
+    
+    supabase
+      .from('tour_destinations')
+      .select(`
+        destination:destinations!inner(
+          id,
+          name,
+          slug,
+          description,
+          country
+        )
+      `)
+      .eq('tour_id', tour.id)
+  ]);
+
+  // Transform the data to match the Tour type
+  return {
+    ...tour,
+    // Map database fields to Tour type
+    title: tour.name || tour.title || 'Unnamed Tour',
+    duration: tour.duration_days || 0,
+    maxGroupSize: tour.group_size_max || 0,
+    price: tour.price_start_from || tour.price_adult || 0,
+    ratingsAverage: parseFloat(tour.rating) || 0,
+    ratingsQuantity: tour.review_count || 0,
+    imageCover: tour.featured_image || tour.image_cover || '',
+    images: Array.isArray(tour.images) ? tour.images : (Array.isArray(tour.gallery) ? tour.gallery : []),
+    startLocation: tour.start_location || 'Nairobi, Kenya',
+    // Get categories and destinations from the grouped data
+    categories: Array.isArray(categoriesData.data) 
+      ? categoriesData.data.map((item: any) => item.category?.name).filter(Boolean) 
+      : [],
+    destinations: Array.isArray(destinationsData.data) 
+      ? destinationsData.data.map((item: any) => item.destination?.name).filter(Boolean) 
+      : [],
+    // Add any other required fields with defaults
+    difficulty: tour.difficulty || 'Moderate',
+    summary: tour.short_description || '',
+    description: tour.description || '',
+    // Ensure all array fields are actually arrays
+    highlights: Array.isArray(tour.highlights) ? tour.highlights : [],
+    included: Array.isArray(tour.included) ? tour.included : [],
+    excluded: Array.isArray(tour.excluded) ? tour.excluded : [],
+    itinerary: Array.isArray(tour.itinerary) ? tour.itinerary : [],
+    reviewCount: tour.review_count || 0,
+    rating: parseFloat(tour.rating) || 0,
+    name: tour.name || '',
+    tourTypes: []
+  } as Tour;
+}
+
 export async function getTourBySlug(slug: string): Promise<Tour | null> {
   const supabase = await createServerClient();
   
