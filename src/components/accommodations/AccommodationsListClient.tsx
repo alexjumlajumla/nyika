@@ -1,10 +1,10 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Accommodation } from '@/types/accommodation';
+import { AccommodationWithRelations } from '../../lib/supabase/accommodations';
 
 interface AccommodationsListClientProps {
-  initialAccommodations: Accommodation[];
+  initialAccommodations: AccommodationWithRelations[];
 }
 
 // Dynamically import AccommodationsList with SSR disabled

@@ -10,10 +10,9 @@
       "@/types/*": ["./src/types/*"],
       "@/app/*": ["./src/app/*"],
       "@/messages/*": ["./src/messages/*"],
-      "@/hooks/*": ["./src/hooks/*"],
       "@/config/*": ["./src/config/*"],
+      "@/hooks/*": ["./src/hooks/*"],
       "@/utils/*": ["./src/utils/*"]
     }
-  },
-  "exclude": ["node_modules"]
+  }
 }

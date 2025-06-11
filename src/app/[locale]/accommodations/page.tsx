@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { locales, type Locale } from '@/i18n/routing';
-import { fetchAccommodations } from '@/lib/supabase/accommodations';
+import { getAccommodations } from '@/lib/supabase/accommodations';
 import AccommodationsListClient from '@/components/accommodations/AccommodationsListClient';
 
 type AccommodationsTranslations = {
@@ -25,7 +25,7 @@ export default async function AccommodationsPage({ params }: PageProps) {
   const t = getTranslations('AccommodationsPage') as unknown as AccommodationsTranslations;
 
   // Fetch accommodations from the database
-  const initialAccommodations = await fetchAccommodations();
+  const initialAccommodations = await getAccommodations();
 
   return (
     <main className="container mx-auto px-4 py-8">

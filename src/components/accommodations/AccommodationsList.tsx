@@ -1,18 +1,19 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useDebounce } from '@/hooks/use-debounce';
+import * as React from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useDebounce } from '../../hooks/use-debounce';
 
 // Icons
 import { Star, MapPin } from 'lucide-react';
 
 // Components
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
+import { Input } from '../ui/input';
+import { Checkbox } from '../ui/checkbox';
+import { Label } from '../ui/label';
 
 // Types
-import { Accommodation } from '@/types/accommodation';
+import { AccommodationWithRelations } from '../../lib/supabase/accommodations';
 
 // Types for sort options and price ranges
 type SortOption = 'rating_desc' | 'price_asc' | 'price_desc' | 'name_asc';
@@ -61,8 +62,20 @@ const ACCOMMODATION_TYPES: Record<string, AccommodationTypeInfo> = {
 };
 
 // Helper function to get accommodation type info
-export const getAccommodationTypeInfo = (type: string): AccommodationTypeInfo => {
-  return ACCOMMODATION_TYPES[type] || { label: type, icon: '🏠' };
+export const getAccommodationTypeInfo = (type: unknown): AccommodationTypeInfo => {
+  // Handle case where type is not a string
+  if (typeof type !== 'string') {
+    return { label: 'Accommodation', icon: '🏠' };
+  }
+  
+  // Check if the type exists in our mapping
+  const typeInfo = ACCOMMODATION_TYPES[type];
+  if (typeInfo) {
+    return typeInfo;
+  }
+  
+  // Default fallback
+  return { label: type, icon: '🏠' };
 };
 
 // Sort options
@@ -91,7 +104,7 @@ interface Filters {
 }
 
 interface AccommodationsListProps {
-  initialAccommodations: Accommodation[];
+  initialAccommodations: AccommodationWithRelations[];
 }
 
 function AccommodationsList({ initialAccommodations }: AccommodationsListProps) {
@@ -135,10 +148,12 @@ function AccommodationsList({ initialAccommodations }: AccommodationsListProps) 
       const query = debouncedSearchQuery.toLowerCase();
       result = result.filter(
         (acc) =>
-          acc.name.toLowerCase().includes(query) ||
-          acc.location?.toLowerCase().includes(query) ||
-          acc.description?.toLowerCase().includes(query) ||
-          acc.tags?.some((tag: string) => tag.toLowerCase().includes(query))
+          acc.name?.toLowerCase().includes(query) ||
+          (acc.location && typeof acc.location === 'string' && acc.location.toLowerCase().includes(query)) ||
+          (acc.description && typeof acc.description === 'string' && acc.description.toLowerCase().includes(query)) ||
+          (Array.isArray(acc.tags) && acc.tags.some(tag => 
+            typeof tag === 'string' && tag.toLowerCase().includes(query)
+          ))
       );
     }
 
@@ -207,19 +222,6 @@ function AccommodationsList({ initialAccommodations }: AccommodationsListProps) 
     }));
   };
 
-  // Clear all filters function - will be used in reset button
-  const handleClearFilters = useCallback(() => {
-    setFilters({
-      searchQuery: '',
-      type: 'all',
-      priceRange: '0-10000',
-      amenities: [],
-      sortBy: 'rating_desc',
-    });
-  }, []);
-  
-  // This function will be used in the reset button
-  const handleResetFilters = handleClearFilters;
 
   if (!isClient) {
     return (
@@ -331,7 +333,7 @@ function AccommodationsList({ initialAccommodations }: AccommodationsListProps) 
           {/* Accommodations Grid */}
           <div className="mt-8 lg:col-span-3 lg:mt-0">
             <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-              {filteredAccommodations.map((accommodation: Accommodation) => (
+              {filteredAccommodations.map((accommodation) => (
                 <div key={accommodation.id} className="group relative flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white hover:shadow-md transition-shadow duration-200">
                   <div className="aspect-w-3 aspect-h-2 bg-gray-200">
                     <img
@@ -355,7 +357,7 @@ function AccommodationsList({ initialAccommodations }: AccommodationsListProps) 
                       </h3>
                       <div className="flex items-center bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded">
                         <Star className="h-3 w-3 fill-current mr-1" />
-                        {accommodation.rating?.toFixed(1) || 'N/A'}
+                        {typeof accommodation.rating === 'number' ? accommodation.rating.toFixed(1) : 'N/A'}
                       </div>
                     </div>
                     <div className="flex items-center text-sm text-gray-500 mb-3">
@@ -367,7 +369,15 @@ function AccommodationsList({ initialAccommodations }: AccommodationsListProps) 
                     </p>
                     <div className="flex items-center">
                       <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded">
-                        {getAccommodationTypeInfo(accommodation.type).label}
+                        {(() => {
+                          // Safely handle the type property which could be a string or other types
+                          const typeValue = accommodation.type;
+                          const typeString = typeof typeValue === 'string' 
+                            ? typeValue 
+                            : 'other';
+                          const typeInfo = getAccommodationTypeInfo(typeString);
+                          return typeInfo.label;
+                        })()}
                       </span>
                     </div>
                   </div>

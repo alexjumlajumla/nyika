@@ -50,46 +50,45 @@ export interface Accommodation {
   
   // Location
   location: string;
-  address?: string;
-  city?: string;
-  country?: string;
-  latitude?: number;
-  longitude?: number;
+  address?: string | null;
+  city?: string | null;
+  country?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   
   // Pricing and ratings
   price: number;
   price_per_night: number;
-  rating?: number;
+  rating?: number | null;
   review_count?: number;
   is_featured: boolean;
   
   // Media
   amenities: string[];
   images: string[];
-  featured_image?: string;
+  featured_image?: string | null;
   
   // Booking details
-  check_in_time?: string;
-  check_out_time?: string;
-  max_guests?: number;
-  min_nights?: number;
+  check_in_time?: string | null;
+  check_out_time?: string | null;
+  max_guests?: number | null;
+  min_nights?: number | null;
   
   // Additional info
-  cancellation_policy?: string;
-  tags?: string[];
-  contact_email?: string;
-  contact_phone?: string;
-  website?: string;
-  social_links?: {
-    [key: string]: string;
-  };
-  policies?: {
-    [key: string]: string | boolean | number;
-  };
+  cancellation_policy?: string | null;
+  tags?: string[] | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  website?: string | null;
+  social_links?: Record<string, string> | null;
+  policies?: Record<string, string | boolean | number> | null;
   
   // System fields
   is_active: boolean;
   is_verified: boolean;
   created_at: string;
   updated_at: string;
+  
+  // Index signature for any other properties that might come from the API
+  [key: string]: unknown;
 }

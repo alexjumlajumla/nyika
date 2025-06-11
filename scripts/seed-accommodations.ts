@@ -193,62 +193,38 @@ async function seedAccommodations() {
     }
 
     // Transform sample data to match the database schema
-    const transformedAccommodations = sampleAccommodations.map(acc => {
-      const accommodation = {
-        // Basic info
-        name: acc.name,
-        slug: acc.slug,
-        description: acc.description,
-        type: acc.type,
-        
-        // Location
-        location: acc.location,
+    const transformedAccommodations = sampleAccommodations.map(acc => ({
+      name: acc.name,
+      slug: acc.slug,
+      description: acc.description,
+      type: acc.type,
+      location: {
         address: acc.address,
         city: acc.city,
         country: acc.country,
-        latitude: acc.latitude,
-        longitude: acc.longitude,
-        
-        // Pricing and ratings - handle both price and price_per_night
-        price_per_night: acc.price ?? acc.price_per_night,
-        rating: acc.rating,
-        review_count: acc.review_count,
-        is_featured: acc.is_featured,
-        
-        // Media
-        amenities: acc.amenities,
-        images: acc.images,
-        featured_image: acc.featured_image,
-        
-        // Booking details
-        check_in_time: acc.check_in_time,
-        check_out_time: acc.check_out_time,
-        max_guests: acc.max_guests,
-        min_nights: acc.min_nights,
-        
-        // Additional info
-        cancellation_policy: acc.cancellation_policy,
-        tags: acc.tags,
-        contact_email: acc.contact_email,
-        contact_phone: acc.contact_phone,
-        website: acc.website,
-        social_links: acc.social_links,
-        policies: acc.policies,
-        
-        // System fields
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_active: true,
-        is_verified: true
-      };
-
-      // Clean up any potential price property
-      if ('price' in accommodation) {
-        delete (accommodation as any).price;
-      }
-
-      return accommodation;
-    });
+        coordinates: {
+          lat: acc.latitude,
+          lng: acc.longitude
+        }
+      },
+      price: acc.price_per_night,
+      rating: acc.rating,
+      review_count: acc.review_count,
+      amenities: acc.amenities,
+      images: acc.images,
+      is_active: true,
+      is_featured: acc.is_featured,
+      check_in_time: acc.check_in_time,
+      check_out_time: acc.check_out_time,
+      max_guests: acc.max_guests,
+      min_nights: acc.min_nights,
+      cancellation_policy: acc.cancellation_policy,
+      tags: acc.tags,
+      contact_email: acc.contact_email,
+      contact_phone: acc.contact_phone,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }));
 
     console.log('Inserting accommodations:', JSON.stringify(transformedAccommodations, null, 2));
     

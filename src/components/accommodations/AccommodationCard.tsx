@@ -6,10 +6,10 @@ import { Star, MapPin, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import type { Accommodation } from '@/types/accommodation';
+import type { AccommodationWithRelations } from '@/lib/supabase/accommodations';
 
 interface AccommodationCardProps {
-  accommodation: Accommodation;
+  accommodation: AccommodationWithRelations;
   className?: string;
 }
 
@@ -70,11 +70,62 @@ const AccommodationCard = ({ accommodation, className }: AccommodationCardProps)
         </div>
         
         <div className="mb-4 flex flex-wrap gap-1">
-          {accommodation.tags?.slice(0, 3).map((tag, index) => (
-            <Badge key={index} variant="secondary" className="text-xs">
-              {tag}
-            </Badge>
-          ))}
+          {(() => {
+            const tags = accommodation.tags;
+            if (!tags) return null;
+
+            try {
+              // Convert tags to an array of strings
+              let tagStrings: string[] = [];
+
+              // Handle different tag formats
+              if (Array.isArray(tags)) {
+                // Handle array of tags
+                tagStrings = tags
+                  .map(tag => {
+                    if (tag == null) return '';
+                    if (typeof tag === 'string') return tag;
+                    if (typeof tag === 'number' || typeof tag === 'boolean') return String(tag);
+                    try {
+                      return JSON.stringify(tag);
+                    } catch {
+                      return '';
+                    }
+                  })
+                  .filter((tag): tag is string => Boolean(tag && tag.trim()));
+              } else if (tags && typeof tags === 'object') {
+                // Handle object by getting its values
+                const values = Object.values(tags);
+                tagStrings = values
+                  .map(value => {
+                    if (value == null) return '';
+                    if (typeof value === 'string') return value;
+                    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+                    try {
+                      return JSON.stringify(value);
+                    } catch {
+                      return '';
+                    }
+                  })
+                  .filter((tag): tag is string => Boolean(tag && tag.trim()));
+              } else if (typeof tags === 'string') {
+                // Handle string by splitting
+                tagStrings = (tags as string).split(/[,\s]+/).filter(Boolean);
+              }
+
+              // Return up to 3 unique, non-empty tags
+              return Array.from(new Set(tagStrings))
+                .slice(0, 3)
+                .map((tag, index) => (
+                  <Badge key={index} variant="secondary" className="text-xs">
+                    {tag}
+                  </Badge>
+                ));
+            } catch {
+              // Silently fail if there's an error processing tags
+              return null;
+            }
+          })()}
         </div>
         
         <div className="flex items-center justify-between border-t border-gray-100 pt-3">
