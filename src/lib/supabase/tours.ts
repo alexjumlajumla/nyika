@@ -91,249 +91,112 @@ export async function getTours(): Promise<Tour[]> {
   }, {} as Record<string, any[]>);
 
   // Transform the data to match the Tour type
-  return tours.map((tour: any) => ({
+  return (tours || []).map((tour: any) => ({
     ...tour,
     // Map database fields to Tour type
+    title: tour.name || tour.title || 'Unnamed Tour',
     duration: tour.duration_days || 0,
     maxGroupSize: tour.group_size_max || 0,
-    price: tour.price_adult || 0,
+    price: tour.price_start_from || tour.price_adult || 0,
     ratingsAverage: parseFloat(tour.rating) || 0,
     ratingsQuantity: tour.review_count || 0,
-    imageCover: tour.featured_image || '',
-    images: tour.gallery || [],
-    startLocation: tour.start_location || '',
-    // Get categories and destinations from the grouped data with fallbacks
-    categories: (categoriesByTourId[tour.id] || []).map((c: any) => ({
-      id: c.id,
-      name: c.name,
-      slug: c.slug,
-      description: c.description
-    })),
-    destinations: (destinationsByTourId[tour.id] || []).map((d: any) => ({
-      id: d.id,
-      name: d.name,
-      slug: d.slug,
-      description: d.description,
-      country: d.country
-    })),
-    // Add any other required fields with defaults
-    difficulty: tour.difficulty_level || 'moderate',
-    summary: tour.short_description || '',
-    description: tour.description || '',
-    // Add empty arrays for required array fields if not present
-    included: tour.price_includes?.items || [],
-    excluded: tour.price_excludes?.items || [],
-    itinerary: tour.itinerary || [],
-    tourTypes: []
-  }));
-}
-
-export async function getTourBySlug(slug: string): Promise<Tour | null> {
-  try {
-    const supabase = await createServerClient();
-    
-    // First, fetch the tour by slug
-    const { data: tour, error: tourError } = await supabase
-      .from('tours')
-      .select('*')
-      .eq('slug', slug)
-      .single();
-
-    if (tourError || !tour) {
-      logger.error('Error fetching tour by slug:', { error: tourError, slug });
-      return null;
-    }
-
-    // Fetch tour categories with proper error handling
-    let tourCategories: any[] = [];
-    try {
-      const { data, error } = await supabase
-        .from('tour_category_relations')
-        .select(`
-          category:categories!inner(
-            id,
-            name,
-            slug,
-            description
-          )
-        `)
-        .eq('tour_id', tour.id);
-      
-      if (error) {
-        logger.error('Error fetching tour categories:', { error, tourId: tour.id });
-      } else {
-        tourCategories = data || [];
-      }
-    } catch (error) {
-      logger.error('Unexpected error fetching tour categories:', { error, tourId: tour.id });
-    }
-
-    // Fetch tour destinations with proper error handling
-    let tourDestinations: any[] = [];
-    try {
-      const { data, error } = await supabase
-        .from('tour_destinations')
-        .select(`
-          destination:destinations!inner(
-            id,
-            name,
-            slug,
-            description,
-            country
-          )
-        `)
-        .eq('tour_id', tour.id);
-      
-      if (error) {
-        logger.error('Error fetching tour destinations:', { error, tourId: tour.id });
-      } else {
-        tourDestinations = data || [];
-      }
-    } catch (error) {
-      logger.error('Unexpected error fetching tour destinations:', { error, tourId: tour.id });
-    }
-    
-    // Extract categories and destinations
-    const categories = tourCategories
-      .filter(item => item?.category)
-      .map(({ category }) => ({
-        id: category.id,
-        name: category.name,
-        slug: category.slug,
-        description: category.description
-      }));
-
-    const destinations = tourDestinations
-      .filter(item => item?.destination)
-      .map(({ destination }) => ({
-        id: destination.id,
-        name: destination.name,
-        slug: destination.slug,
-        description: destination.description,
-        country: destination.country
-      }));
-    
-    // Get primary destination (first in the array or empty string)
-    const primaryDestination = destinations.length > 0 ? destinations[0].name : '';
-    
-    // Transform the data to match the Tour type
-    return {
-      ...tour,
-      // Map database fields to Tour type
-      duration: tour.duration_days || 0,
-      maxGroupSize: tour.group_size_max || 0,
-      price: tour.price_adult || 0,
-      ratingsAverage: parseFloat(tour.rating) || 0,
-      ratingsQuantity: tour.review_count || 0,
-      imageCover: tour.featured_image || '',
-      images: tour.gallery || [],
-      startLocation: tour.start_location || '',
-      // Add the destination field (first destination or empty string)
-      destination: primaryDestination,
-      // Categories and destinations
-      categories,
-      destinations,
-      // Add any other required fields with defaults
-      difficulty: tour.difficulty_level || 'moderate',
-      summary: tour.short_description || '',
-      description: tour.description || '',
-      // Add empty arrays for required array fields if not present
-      highlights: Array.isArray(tour.highlights) ? tour.highlights : [],
-      included: tour.price_includes?.items || [],
-      excluded: tour.price_excludes?.items || [],
-      itinerary: tour.itinerary || [],
-      tourTypes: []
-    };
-  } catch (error) {
-    logger.error('Unexpected error in getTourBySlug:', { error, slug });
-    return null;
-  }
-}
-
-export async function getFeaturedTours(limit = 3): Promise<Tour[]> {
-  const supabase = await createServerClient();
-  
-  // First, fetch featured tours
-  const { data: featuredTours, error: toursError } = await supabase
-    .from('tours')
-    .select('*')
-    .eq('is_featured', true)
-    .limit(limit);
-
-  if (toursError || !featuredTours || featuredTours.length === 0) {
-    logger.error('Error fetching featured tours:', toursError?.message || 'No featured tours found');
-    return [];
-  }
-
-  // Get all tour IDs
-  const tourIds = featuredTours.map(tour => tour.id);
-
-  // Fetch tour categories
-  const { data: tourCategories, error: categoriesError } = await supabase
-    .from('tour_category_relations')
-    .select(`
-      tour_id,
-      category:categories!inner(*)
-    `)
-    .in('tour_id', tourIds);
-
-  if (categoriesError) {
-    logger.error('Error fetching featured tour categories:', categoriesError);
-  }
-
-  // Fetch tour destinations
-  const { data: tourDestinations, error: destinationsError } = await supabase
-    .from('tour_destinations')
-    .select(`
-      tour_id,
-      destination:destinations!inner(*)
-    `)
-    .in('tour_id', tourIds);
-
-  if (destinationsError) {
-    logger.error('Error fetching featured tour destinations:', destinationsError);
-  }
-
-  // Group categories and destinations by tour ID
-  const categoriesByTourId = (tourCategories || []).reduce((acc, item) => {
-    if (!acc[item.tour_id]) {
-      acc[item.tour_id] = [];
-    }
-    acc[item.tour_id].push(item.category);
-    return acc;
-  }, {} as Record<string, any[]>);
-
-  const destinationsByTourId = (tourDestinations || []).reduce((acc, item) => {
-    if (!acc[item.tour_id]) {
-      acc[item.tour_id] = [];
-    }
-    acc[item.tour_id].push(item.destination);
-    return acc;
-  }, {} as Record<string, any[]>);
-
-  // Transform the data to match the Tour type
-  return featuredTours.map((tour: any) => ({
-    ...tour,
-    // Map database fields to Tour type
-    duration: tour.duration_days || 0,
-    maxGroupSize: tour.group_size_max || 0,
-    price: tour.price_adult || 0,
-    ratingsAverage: parseFloat(tour.rating) || 0,
-    ratingsQuantity: tour.review_count || 0,
-    imageCover: tour.featured_image || '',
-    images: tour.gallery || [],
-    startLocation: tour.start_location || '',
+    imageCover: tour.featured_image || tour.image_cover || '',
+    images: tour.images || tour.gallery || [],
+    startLocation: tour.start_location || 'Nairobi, Kenya',
     // Get categories and destinations from the grouped data
     categories: (categoriesByTourId[tour.id] || []).map((c: any) => c?.name).filter(Boolean),
     destinations: (destinationsByTourId[tour.id] || []).map((d: any) => d?.name).filter(Boolean),
     // Add any other required fields with defaults
-    difficulty: tour.difficulty_level || 'moderate',
+    difficulty: tour.difficulty || 'Moderate',
     summary: tour.short_description || '',
     description: tour.description || '',
     // Add empty arrays for required array fields if not present
-    included: tour.price_includes?.items || [],
-    excluded: tour.price_excludes?.items || [],
+    highlights: tour.highlights || [],
+    included: tour.included || [],
+    excluded: tour.excluded || [],
     itinerary: tour.itinerary || [],
+    reviewCount: tour.review_count || 0,
+    rating: parseFloat(tour.rating) || 0,
+    name: tour.name || '',
     tourTypes: []
-  }));
+  } as Tour));
+}
+
+export async function getTourBySlug(slug: string): Promise<Tour | null> {
+  const supabase = await createServerClient();
+  
+  // First, fetch the tour by slug
+  const { data: tour, error } = await supabase
+    .from('tours')
+    .select('*')
+    .eq('slug', slug)
+    .single();
+
+  if (error || !tour) {
+    logger.error('Error fetching tour by slug:', error);
+    return null;
+  }
+
+  // Fetch related data (categories, destinations, etc.)
+  const [categoriesData, destinationsData] = await Promise.all([
+    supabase
+      .from('tour_category_relations')
+      .select(`
+        category:categories!inner(
+          id,
+          name,
+          slug,
+          description
+        )
+      `)
+      .eq('tour_id', tour.id),
+    
+    supabase
+      .from('tour_destinations')
+      .select(`
+        destination:destinations!inner(
+          id,
+          name,
+          slug,
+          description,
+          country
+        )
+      `)
+      .eq('tour_id', tour.id)
+  ]);
+
+  // Transform the data to match the Tour type
+  return {
+    ...tour,
+    // Map database fields to Tour type
+    title: tour.name || tour.title || 'Unnamed Tour',
+    duration: tour.duration_days || 0,
+    maxGroupSize: tour.group_size_max || 0,
+    price: tour.price_start_from || tour.price_adult || 0,
+    ratingsAverage: parseFloat(tour.rating) || 0,
+    ratingsQuantity: tour.review_count || 0,
+    imageCover: tour.featured_image || tour.image_cover || '',
+    images: Array.isArray(tour.images) ? tour.images : (Array.isArray(tour.gallery) ? tour.gallery : []),
+    startLocation: tour.start_location || 'Nairobi, Kenya',
+    // Get categories and destinations from the grouped data
+    categories: Array.isArray(categoriesData.data) 
+      ? categoriesData.data.map((item: any) => item.category?.name).filter(Boolean) 
+      : [],
+    destinations: Array.isArray(destinationsData.data) 
+      ? destinationsData.data.map((item: any) => item.destination?.name).filter(Boolean) 
+      : [],
+    // Add any other required fields with defaults
+    difficulty: tour.difficulty || 'Moderate',
+    summary: tour.short_description || '',
+    description: tour.description || '',
+    // Ensure all array fields are actually arrays
+    highlights: Array.isArray(tour.highlights) ? tour.highlights : [],
+    included: Array.isArray(tour.included) ? tour.included : [],
+    excluded: Array.isArray(tour.excluded) ? tour.excluded : [],
+    itinerary: Array.isArray(tour.itinerary) ? tour.itinerary : [],
+    reviewCount: tour.review_count || 0,
+    rating: parseFloat(tour.rating) || 0,
+    name: tour.name || '',
+    tourTypes: []
+  } as Tour;
 }
