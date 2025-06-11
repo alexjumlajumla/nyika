@@ -1,44 +1,70 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { 
-  Star, MapPin, Clock, Users, Check, X, Loader2,
-  ChevronLeft, ChevronRight, CheckCircle, CreditCard, 
-  Banknote, Wallet, Smartphone, ArrowRight, Calendar, Users as UsersIcon
-} from 'lucide-react';
+import { useState } from 'react';
+import { ChevronLeft, ChevronRight, MapPin, Clock, Star, Plus, Minus, X, Calendar as CalendarIcon, Check, Loader2 } from 'lucide-react';
+// Date picker component will be implemented separately
+import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { format } from 'date-fns';
-import { Calendar as CalendarIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import type { Tour as TourType } from '@/types/tour';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
+import TourCard from './TourCard';
+import dynamic from 'next/dynamic';
 
-type TabType = 'overview' | 'itinerary' | 'details' | 'reviews';
-
-
-interface TourDetailProps {
-  tour: TourType;
+interface TourItineraryItem {
+  day: number;
+  title: string;
+  description: string;
+  activities: string[];
+  meals?: string[];
 }
 
-export const TourDetail = ({ tour }: TourDetailProps) => {
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+interface TourDetailProps {
+  tour: {
+    id: string;
+    title: string;
+    description: string;
+    duration: number;
+    price: number;
+    images: string[];
+    highlights?: string[];
+    itinerary?: TourItineraryItem[];
+    rating?: number;
+    reviewCount?: number;
+    destination?: string;
+    included?: string[];
+    excluded?: string[];
+    reviews?: Array<{
+      id: string;
+      author: string;
+      rating: number;
+      comment: string;
+      date: string;
+    }>;
+  };
+  similarTours?: Array<{
+    id: string;
+    title: string;
+    price: number;
+    duration: number;
+    rating: number;
+    reviewCount: number;
+    image: string;
+  }>;
+}
+
+export const TourDetail = ({ tour, similarTours = [] }: TourDetailProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [guests, setGuests] = useState(1);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+
   const [isProcessing, setIsProcessing] = useState(false);
-  const [activePaymentMethod, setActivePaymentMethod] = useState('pesapal');
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [guests, setGuests] = useState(1);
   const [bookingDetails, setBookingDetails] = useState({
     fullName: '',
     email: '',
@@ -46,586 +72,535 @@ export const TourDetail = ({ tour }: TourDetailProps) => {
     specialRequests: ''
   });
 
-  const images = tour.images?.length ? tour.images : ['/placeholder-tour.jpg'];
   const subtotal = tour.price * guests;
-  const serviceFee = Math.ceil(subtotal * 0.1); // 10% service fee
+  const serviceFee = Math.round(tour.price * guests * 0.1); // 10% service fee
   const totalPrice = subtotal + serviceFee;
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(price);
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setBookingDetails(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setBookingDetails(prev => ({ ...prev, [name]: value }));
   };
 
-  const processPayment = async () => {
+  const handleBookingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsProcessing(true);
+    
     try {
-      // In a real app, you would call your API endpoint to process the payment
-      // For PesaPal, you would typically redirect to their payment page
-      console.log('Processing payment with PesaPal', {
-        amount: totalPrice,
-        tourId: tour.id,
-        customerDetails: bookingDetails
-      });
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Redirect to PesaPal payment page (replace with actual implementation)
-      // window.location.href = `https://pay.pesapal.com/?amount=${totalPrice}&...`;
-      
-      // For demo purposes, we'll just show a success message
-      alert('Redirecting to PesaPal payment gateway...');
-      setIsPaymentModalOpen(false);
+      await new Promise(resolve => setTimeout(resolve, 1500));
       setIsBookingModalOpen(false);
-    } catch (error) {
-      console.error('Payment processing error:', error);
-      alert('There was an error processing your payment. Please try again.');
+      setBookingDetails({
+        fullName: '',
+        email: '',
+        phone: '',
+        specialRequests: ''
+      });
+      setGuests(1);
+      setSelectedDate(new Date());
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handleBookingSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedDate) {
-      alert('Please select a date');
-      return;
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setSelectedDate(date);
     }
-    setIsPaymentModalOpen(true);
   };
 
-  const formatPrice = (price: number) => 
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
+  // Dynamically import Calendar component to avoid SSR issues
+  const Calendar = dynamic(
+    () => import('@/components/ui/calendar').then((mod) => mod.Calendar),
+    { 
+      ssr: false, 
+      loading: () => <div className="w-full h-[300px] bg-gray-100 animate-pulse rounded-md" /> 
+    }
+  );
+  
+  // Calendar component with proper typing for the date picker
+  const DatePicker = () => (
+    <Calendar
+      mode="single"
+      selected={selectedDate || undefined}
+      onSelect={handleDateSelect}
+      initialFocus
+    />
+  );
 
-  const ImageGallery = () => (
-    <div className="relative aspect-[4/3] w-full bg-gray-100 rounded-lg overflow-hidden">
-      <Image
-        src={images[currentImageIndex]}
-        alt={`${tour.title} - Photo ${currentImageIndex + 1}`}
-        fill
-        className="object-cover"
-        priority
-      />
-      {images.length > 1 && (
-        <>
+  const renderImageGallery = () => {
+    return (
+      <div className="relative w-full h-[500px] rounded-2xl overflow-hidden flex border border-gray-200">
+        {/* Thumbnails on the left */}
+        <div className="w-20 flex-shrink-0 bg-gray-50 p-2 overflow-y-auto">
+          <div className="flex flex-col gap-2">
+            {tour.images.map((image, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentImageIndex(index)}
+                className={`w-full aspect-square rounded-md overflow-hidden border transition-all ${
+                  index === currentImageIndex ? 'border-2 border-primary' : 'border-gray-200'
+                }`}
+                aria-label={`View image ${index + 1}`}
+              >
+                <Image
+                  src={image}
+                  alt={`"${tour.title}" thumbnail ${index + 1}`}
+                  width={80}
+                  height={80}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        {/* Main image */}
+        <div className="relative flex-1 h-[500px] bg-gray-100">
+          <Image
+            src={tour.images[currentImageIndex] || '/placeholder.svg'}
+            alt={`${tour.title} - Main view`}
+            fill
+            sizes="(max-width: 768px) 100vw, 70vw"
+            className="object-cover"
+            priority={currentImageIndex === 0}
+          />
           <button
-            onClick={() => setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length)}
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white/90 p-2 rounded-full shadow-md"
+            onClick={() =>
+              setCurrentImageIndex(
+                (prev) => (prev - 1 + tour.images.length) % tour.images.length
+              )
+            }
+            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all hover:scale-110"
             aria-label="Previous image"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-6 w-6 text-gray-800" />
           </button>
           <button
-            onClick={() => setCurrentImageIndex((prev) => (prev + 1) % images.length)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white/90 p-2 rounded-full shadow-md"
+            onClick={() =>
+              setCurrentImageIndex((prev) => (prev + 1) % tour.images.length)
+            }
+            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all hover:scale-110"
             aria-label="Next image"
           >
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-6 w-6 text-gray-800" />
           </button>
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white text-sm px-3 py-1 rounded-full">
-            {currentImageIndex + 1} / {images.length}
-          </div>
-        </>
-      )}
-    </div>
-  );
+        </div>
+      </div>
+    );
+  };
 
-  const Thumbnails = () => (
-    <div className="flex gap-2 mt-3 overflow-x-auto">
-      {images.map((img, index) => (
-        <button
-          key={index}
-          onClick={() => setCurrentImageIndex(index)}
-          className={`h-16 w-20 flex-shrink-0 rounded-md overflow-hidden transition-opacity ${
-            index === currentImageIndex ? 'ring-2 ring-primary' : 'opacity-70 hover:opacity-100'
-          }`}
-          aria-label={`View image ${index + 1}`}
-        >
-          <Image
-            src={img}
-            alt=""
-            width={80}
-            height={64}
-            className="object-cover h-full w-full"
-          />
-        </button>
-      ))}
-    </div>
-  );
+  const handleBookNow = () => {
+    const bookingData = {
+      tour,
+      date: selectedDate,
+      guests,
+      totalPrice,
+      subtotal: tour.price * guests,
+      serviceFee,
+    };
+    sessionStorage.setItem('currentBooking', JSON.stringify(bookingData));
+    window.location.href = `/tours/${tour.id}/book`;
+  };
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Main Content */}
-        <div className="lg:col-span-2">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">About {tour.title}</h2>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              {tour.title}
-            </h1>
-            <div className="flex flex-wrap items-center gap-4 text-gray-600 mb-4">
-              {tour.rating && (
-                <div className="flex items-center">
-                  <Star className="h-5 w-5 text-yellow-400 mr-1" />
-                  <span>{tour.rating.toFixed(1)}</span>
-                  {tour.reviewCount && (
-                    <span className="text-gray-500 ml-1">({tour.reviewCount})</span>
-                  )}
-                </div>
-              )}
-              {tour.destination && (
-                <div className="flex items-center">
-                  <MapPin className="h-5 w-5 text-primary mr-1" />
-                  <span>{tour.destination}</span>
-                </div>
-              )}
+  const renderSimilarTours = () => {
+    if (!similarTours?.length) return null;
+
+    return (
+      <div className="mt-16">
+        <h2 className="text-2xl font-bold mb-6">You May Also Like</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {similarTours.map((tour) => (
+            <TourCard 
+              key={tour.id}
+              id={tour.id}
+              title={tour.title}
+              price={tour.price}
+              duration={tour.duration}
+              ratingsAverage={tour.rating}
+              ratingsQuantity={tour.reviewCount}
+              imageCover={tour.image}
+              slug={`/tours/${tour.id}`}
+              destinations={[]}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderReviews = () => {
+    if (!tour.reviews?.length) {
+      return <p>No reviews yet. Be the first to review!</p>;
+    }
+
+    return (
+      <div className="space-y-6">
+        {tour.reviews.map((review) => (
+          <div key={review.id} className="border-b pb-4">
+            <div className="flex items-center justify-between">
+              <div className="font-medium">{review.author}</div>
               <div className="flex items-center">
-                <Clock className="h-5 w-5 text-primary mr-1" />
-                <span>{tour.duration} days</span>
-              </div>
-              <div className="flex items-center">
-                <Users className="h-5 w-5 text-primary mr-1" />
-                <span>Max {tour.maxGroupSize}</span>
+                <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                <span className="ml-1">{review.rating}</span>
               </div>
             </div>
-            
-            <ImageGallery />
-            <Thumbnails />
+            <p className="text-sm text-gray-600 mt-1">{review.comment}</p>
+            <p className="text-xs text-gray-400 mt-2">
+              {new Date(review.date).toLocaleDateString()}
+            </p>
           </div>
+        ))}
+      </div>
+    );
+  };
 
-          {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabType)}>
-            <TabsList className="grid w-full grid-cols-4">
-              {(['overview', 'itinerary', 'details', 'reviews'] as TabType[]).map((tab) => (
-                <TabsTrigger key={tab} value={tab} className="capitalize">
-                  {tab}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+  const renderItinerary = () => {
+    if (!tour.itinerary?.length) return null;
 
-            <TabsContent value="overview" className="mt-6 space-y-6">
-              <h3 className="text-lg font-semibold">Tour Overview</h3>
-              <p className="text-gray-700">{tour.description}</p>
-              
-              {tour.highlights?.length > 0 && (
-                <div className="grid gap-4 md:grid-cols-2">
-                  {tour.highlights.map((highlight, index) => (
-                    <div key={index} className="flex items-start">
-                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
-                      <span className="text-gray-900">{highlight}</span>
-                    </div>
-                  ))}
+    return (
+      <div className="mt-6">
+        <h3 className="text-lg font-semibold mb-4">Itinerary</h3>
+        <div className="space-y-6">
+          {tour.itinerary.map((day) => (
+            <div key={day.day} className="border rounded-lg p-4">
+              <h4 className="font-medium text-lg">Day {day.day}: {day.title}</h4>
+              <p className="mt-2 text-gray-600">{day.description}</p>
+              {day.activities?.length > 0 && (
+                <div className="mt-3">
+                  <h5 className="font-medium">Activities:</h5>
+                  <ul className="list-disc pl-5 mt-1 space-y-1">
+                    {day.activities.map((activity, i) => (
+                      <li key={i}>{activity}</li>
+                    ))}
+                  </ul>
                 </div>
               )}
-            </TabsContent>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
-            <TabsContent value="itinerary" className="mt-6 space-y-6">
-              {tour.itinerary.map((day) => (
-                <Card key={day.day} className="overflow-hidden">
-                  <CardHeader className="bg-gray-50 py-3">
-                    <h3 className="font-semibold">Day {day.day}: {day.title}</h3>
-                  </CardHeader>
-                  <CardContent className="p-4">
-                    {day.description && (
-                      <p className="mb-3">{day.description}</p>
-                    )}
-                    {day.meals?.length ? (
-                      <div className="mt-2">
-                        <h4 className="font-medium">Meals:</h4>
-                        <ul className="list-disc ml-5">
-                          {day.meals.map((meal, i) => (
-                            <li key={i}>{meal}</li>
-                          ))}
-                        </ul>
+  return (
+    <div className="bg-gray-50 min-h-screen">
+      {/* Header with tour title and breadcrumbs */}
+      <div className="bg-white shadow-sm">
+        <div className="container mx-auto px-4 py-4">
+          <nav className="flex" aria-label="Breadcrumb">
+            <ol className="inline-flex items-center space-x-1 md:space-x-2">
+              <li className="inline-flex items-center">
+                <a href="/" className="text-gray-700 hover:text-gray-900 text-sm">
+                  Home
+                </a>
+              </li>
+              <li>
+                <div className="flex items-center">
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                  <a href="/tours" className="text-gray-700 hover:text-gray-900 ml-1 text-sm md:ml-2">
+                    Tours
+                  </a>
+                </div>
+              </li>
+              <li aria-current="page">
+                <div className="flex items-center">
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-500 ml-1 text-sm md:ml-2">{tour.title}</span>
+                </div>
+              </li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          {/* Left Column - Image Gallery */}
+          <div className="lg:col-span-2 space-y-6">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">{tour.title}</h1>
+              <div className="flex items-center mt-2 text-gray-600">
+                <div className="flex items-center">
+                  <Star className="h-5 w-5 text-yellow-400 fill-current" />
+                  <span className="ml-1">{tour.rating || 'N/A'}</span>
+                  {tour.reviewCount && (
+                    <span className="ml-2 text-sm">({tour.reviewCount} reviews)</span>
+                  )}
+                </div>
+                <span className="mx-2">•</span>
+                <div className="flex items-center">
+                  <MapPin className="h-5 w-5 text-gray-400" />
+                  <span className="ml-1">{tour.destination || 'Multiple destinations'}</span>
+                </div>
+                <span className="mx-2">•</span>
+                <div className="flex items-center">
+                  <Clock className="h-5 w-5 text-gray-400" />
+                  <span className="ml-1">{tour.duration} days</span>
+                </div>
+              </div>
+            </div>
+            {renderImageGallery()}
+          </div>
+
+          {/* Right Column - Booking Card */}
+          <div className="lg:sticky lg:top-8 h-[500px]">
+            <Card className="shadow-lg h-full flex flex-col">
+              <CardHeader className="bg-gray-50 border-b p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-2xl font-bold">{formatPrice(tour.price)}</CardTitle>
+                    <CardDescription>per person</CardDescription>
+                  </div>
+                  <div className="flex items-center bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                    <Star className="w-3 h-3 mr-1 fill-current" />
+                    {tour.rating || 'N/A'}
+                    {tour.reviewCount && ` (${tour.reviewCount})`}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 flex-1 flex flex-col">
+                <form onSubmit={handleBookingSubmit} className="space-y-4 flex-1 flex flex-col">
+                  <div>
+                    <Label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
+                      Select Date
+                    </Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'w-full justify-start text-left font-normal',
+                            !selectedDate && 'text-muted-foreground'
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {selectedDate ? format(selectedDate, 'PPP') : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <DatePicker />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="guests" className="block text-sm font-medium text-gray-700 mb-1">
+                      Number of Guests
+                    </Label>
+                    <div className="flex items-center border rounded-md">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 rounded-r-none"
+                        onClick={() => setGuests(prev => Math.max(1, prev - 1))}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <div className="flex-1 text-center">
+                        <span className="font-medium">{guests}</span>
                       </div>
-                    ) : null}
-                  </CardContent>
-                </Card>
-              ))}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 rounded-l-none"
+                        onClick={() => setGuests(prev => prev + 1)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 flex-1">
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">{formatPrice(tour.price)} × {guests} {guests > 1 ? 'guests' : 'guest'}</span>
+                        <span className="font-medium">{formatPrice(tour.price * guests)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-500">
+                        <span>Service fee</span>
+                        <span>{formatPrice(serviceFee)}</span>
+                      </div>
+                      <div className="border-t pt-3 flex justify-between font-semibold text-lg">
+                        <span>Total Amount</span>
+                        <span>{formatPrice(totalPrice)}</span>
+                      </div>
+                    </div>
+
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-primary hover:bg-primary/90 text-white h-12 text-lg"
+                      disabled={isProcessing}
+                      onClick={handleBookNow}
+                    >
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : 'Book Now'}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Tour Content */}
+        <div className="mt-8">
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="itinerary">Itinerary</TabsTrigger>
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="reviews">Reviews</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview" className="mt-6">
+              <div className="prose max-w-none">
+                <p className="text-gray-600">{tour.description}</p>
+                {tour.highlights && tour.highlights.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold mb-4">Highlights</h3>
+                    <ul className="space-y-2">
+                      {tour.highlights.map((highlight, index) => (
+                        <li key={index} className="flex items-start">
+                          <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                          <span>{highlight}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </TabsContent>
 
-            <TabsContent value="details" className="mt-6 space-y-6">
-              <div className="grid md:grid-cols-2 gap-8">
+            <TabsContent value="itinerary" className="mt-6">
+              {renderItinerary()}
+            </TabsContent>
+
+            <TabsContent value="details" className="mt-6">
+              <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Included</h3>
                   <ul className="space-y-2">
-                    {tour.included?.map((item, i) => (
-                      <li key={i} className="flex items-start">
-                        <Check className="h-5 w-5 text-green-500 mr-2" />
+                    {tour.included?.map((item, index) => (
+                      <li key={index} className="flex items-center">
+                        <Check className="h-4 w-4 text-green-500 mr-2" />
                         <span>{item}</span>
                       </li>
-                    ))}
+                    )) || <p>No inclusions specified</p>}
                   </ul>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">Not Included</h3>
-                  <ul className="space-y-2">
-                    {tour.excluded?.map((item, i) => (
-                      <li key={i} className="flex items-start">
-                        <X className="h-5 w-5 text-red-500 mr-2" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                {tour.excluded && tour.excluded.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">Not Included</h3>
+                    <ul className="space-y-2">
+                      {tour.excluded.map((item, index) => (
+                        <li key={index} className="flex items-center">
+                          <X className="h-4 w-4 text-red-500 mr-2" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
+            </TabsContent>
+
+            <TabsContent value="reviews" className="mt-6">
+              {renderReviews()}
             </TabsContent>
           </Tabs>
         </div>
 
-        {/* Booking Card */}
-        <div className="lg:sticky lg:top-8 h-fit">
-          <Card className="shadow-lg">
-            <CardHeader className="border-b">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-2xl font-bold">{formatPrice(tour.price)}</p>
-                  <p className="text-sm text-gray-500">per person</p>
-                </div>
-                {tour.originalPrice && (
-                  <div className="text-right">
-                    <p className="text-sm text-gray-500 line-through">
-                      {formatPrice(tour.originalPrice)}
-                    </p>
-                    <Badge variant="secondary" className="mt-1">
-                      Save {Math.round((1 - tour.price / tour.originalPrice) * 100)}%
-                    </Badge>
-                  </div>
-                )}
-              </div>
-            </CardHeader>
-
-            <CardContent className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Select Date</label>
-                <input
-                  type="date"
-                  className="w-full p-2 border rounded-md"
-                  min={new Date().toISOString().split('T')[0]}
-                  onChange={(e) => setSelectedDate(new Date(e.target.value))}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Travelers</label>
-                <div className="flex items-center border rounded-md overflow-hidden">
-                  <Button
-                    variant="ghost"
-                    onClick={() => setGuests(Math.max(1, guests - 1))}
-                    className="rounded-none"
-                  >
-                    -
-                  </Button>
-                  <span className="flex-1 text-center">{guests}</span>
-                  <Button
-                    variant="ghost"
-                    onClick={() => setGuests(Math.min(tour.maxGroupSize, guests + 1))}
-                    className="rounded-none"
-                  >
-                    +
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-4">
-                <div className="flex justify-between">
-                  <span>{guests} × {formatPrice(tour.price)}</span>
-                  <span className="font-medium">{formatPrice(totalPrice)}</span>
-                </div>
-                <Button 
-                  onClick={() => setIsBookingModalOpen(true)}
-                  className="w-full py-6 text-lg"
-                  size="lg"
-                >
-                  <CreditCard className="mr-2 h-5 w-5" />
-                  Book Now
-                </Button>
-                <p className="text-center text-sm text-gray-500">
-                  Free cancellation up to 24 hours before
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {renderSimilarTours()}
       </div>
 
-      {/* Booking Confirmation Modal */}
+      {/* Booking Modal */}
       <Dialog open={isBookingModalOpen} onOpenChange={setIsBookingModalOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="sm:max-w-[500px] mt-[144px] sm:mt-[164px]">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">Complete Your Booking</DialogTitle>
-            <DialogDescription className="text-gray-600">
-              Review your tour details and fill in your information
+            <DialogTitle>Book Your Tour</DialogTitle>
+            <DialogDescription>
+              Fill in your details to complete your booking.
             </DialogDescription>
           </DialogHeader>
-          
-          <form onSubmit={handleBookingSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Tour Details */}
-              <Card className="p-4">
-                <h3 className="font-semibold text-lg mb-4 flex items-center">
-                  <MapPin className="h-5 w-5 mr-2 text-primary" />
-                  Tour Details
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium">{tour.title}</h4>
-                    <p className="text-sm text-gray-600">{tour.duration} days</p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center text-sm">
-                      <CalendarIcon className="h-4 w-4 mr-2 text-gray-500" />
-                      <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              'w-full justify-start text-left font-normal',
-                              !selectedDate && 'text-muted-foreground'
-                            )}
-                          >
-                            {selectedDate ? (
-                              format(selectedDate, 'PPP')
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <CalendarComponent
-                            mode="single"
-                            selected={selectedDate || undefined}
-                            onSelect={(date) => {
-                              setSelectedDate(date || null);
-                              setIsDatePickerOpen(false);
-                            }}
-                            disabled={(date) => date < new Date()}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    
-                    <div className="flex items-center text-sm">
-                      <UsersIcon className="h-4 w-4 mr-2 text-gray-500" />
-                      <div className="flex items-center border rounded-md overflow-hidden">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setGuests(Math.max(1, guests - 1))}
-                          className="rounded-none h-8 w-8 p-0"
-                        >
-                          -
-                        </Button>
-                        <span className="w-8 text-center">{guests}</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setGuests(Math.min(tour.maxGroupSize, guests + 1))}
-                          className="rounded-none h-8 w-8 p-0"
-                        >
-                          +
-                        </Button>
-                      </div>
-                      <span className="ml-2 text-gray-500 text-xs">Max {tour.maxGroupSize} people</span>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-
-              {/* Price Summary */}
-              <Card className="p-4">
-                <h3 className="font-semibold text-lg mb-4">Price Summary</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>{guests} × {formatPrice(tour.price)}</span>
-                    <span>{formatPrice(subtotal)}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-600">
-                    <span>Service fee</span>
-                    <span>{formatPrice(serviceFee)}</span>
-                  </div>
-                  <div className="border-t border-gray-200 my-2"></div>
-                  <div className="flex justify-between font-semibold text-base">
-                    <span>Total</span>
-                    <span className="text-primary">{formatPrice(totalPrice)}</span>
-                  </div>
-                </div>
-              </Card>
-
-              {/* Personal Information */}
-              <Card className="p-4 md:col-span-2">
-                <h3 className="font-semibold text-lg mb-4">Your Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="fullName">Full Name *</Label>
-                    <Input
-                      id="fullName"
-                      name="fullName"
-                      value={bookingDetails.fullName}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={bookingDetails.email}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="phone">Phone Number *</Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      value={bookingDetails.phone}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label htmlFor="specialRequests">Special Requests (Optional)</Label>
-                    <textarea
-                      id="specialRequests"
-                      name="specialRequests"
-                      rows={3}
-                      value={bookingDetails.specialRequests}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
-                    />
-                  </div>
-                </div>
-              </Card>
+          <form onSubmit={handleBookingSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input
+                id="fullName"
+                name="fullName"
+                value={bookingDetails.fullName}
+                onChange={handleInputChange}
+                required
+              />
             </div>
-            
-            <DialogFooter className="sm:justify-between">
-              <Button type="button" variant="outline" onClick={() => setIsBookingModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" className="px-8">
-                Continue to Payment
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Payment Method Modal */}
-      <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">Select Payment Method</DialogTitle>
-            <DialogDescription className="text-gray-600">
-              Choose how you'd like to pay for your booking
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <h3 className="font-medium">Payment Options</h3>
-              <RadioGroup 
-                value={activePaymentMethod} 
-                onValueChange={setActivePaymentMethod}
-                className="grid gap-4"
-              >
-                <div className="flex items-center space-x-3 rounded-lg border p-4 hover:border-primary transition-colors">
-                  <RadioGroupItem value="pesapal" id="pesapal" className="text-primary" />
-                  <div className="flex-1">
-                    <Label htmlFor="pesapal" className="flex items-center cursor-pointer">
-                      <div className="bg-blue-50 p-2 rounded-md mr-3">
-                        <CreditCard className="h-6 w-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">PesaPal</p>
-                        <p className="text-sm text-gray-500">Pay securely via PesaPal</p>
-                      </div>
-                    </Label>
-                  </div>
-                  <img 
-                    src="/pesapal-logo.png" 
-                    alt="PesaPal" 
-                    className="h-8 w-auto opacity-80"
-                    onError={(e) => {
-                      // Fallback if logo is not found
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                    }}
-                  />
-                </div>
-                
-                <div className="flex items-center space-x-3 rounded-lg border p-4 hover:border-primary transition-colors">
-                  <RadioGroupItem value="mpesa" id="mpesa" className="text-primary" />
-                  <div className="flex-1">
-                    <Label htmlFor="mpesa" className="flex items-center cursor-pointer">
-                      <div className="bg-green-50 p-2 rounded-md mr-3">
-                        <Smartphone className="h-6 w-6 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">M-Pesa</p>
-                        <p className="text-sm text-gray-500">Pay via M-Pesa (Coming Soon)</p>
-                      </div>
-                    </Label>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-3 rounded-lg border p-4 hover:border-primary transition-colors">
-                  <RadioGroupItem value="bank" id="bank" className="text-primary" />
-                  <div className="flex-1">
-                    <Label htmlFor="bank" className="flex items-center cursor-pointer">
-                      <div className="bg-purple-50 p-2 rounded-md mr-3">
-                        <Banknote className="h-6 w-6 text-purple-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Bank Transfer</p>
-                        <p className="text-sm text-gray-500">Direct bank transfer (Coming Soon)</p>
-                      </div>
-                    </Label>
-                  </div>
-                </div>
-              </RadioGroup>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={bookingDetails.email}
+                onChange={handleInputChange}
+                required
+              />
             </div>
-            
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-sm text-gray-600">Total to pay</p>
-                  <p className="text-2xl font-bold">{formatPrice(totalPrice)}</p>
-                </div>
-                <Button 
-                  onClick={processPayment}
-                  disabled={isProcessing}
-                  className="px-8 py-6 text-base"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    'Pay Now with PesaPal'
-                  )}
-                </Button>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                name="phone"
+                type="tel"
+                value={bookingDetails.phone}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="specialRequests">Special Requests (Optional)</Label>
+              <textarea
+                id="specialRequests"
+                name="specialRequests"
+                rows={3}
+                value={bookingDetails.specialRequests}
+                onChange={handleInputChange}
+                className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+            <div className="space-y-2 pt-4">
+              <div className="flex justify-between">
+                <span>Total Amount:</span>
+                <span>{formatPrice(totalPrice)}</span>
               </div>
-              <p className="text-xs text-gray-500 mt-2 text-center">
-                By proceeding, you agree to our Terms of Service and Privacy Policy
-              </p>
+              <Button type="submit" className="w-full" disabled={isProcessing}>
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  'Confirm Booking'
+                )}
+              </Button>
             </div>
-          </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
   );
 };
+
+export default TourDetail;

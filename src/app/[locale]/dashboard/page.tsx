@@ -1,33 +1,45 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
-import { Loader2 } from 'lucide-react';
 
+// This is a simple server-side redirect component
 export default function DashboardRedirect() {
-  const router = useRouter();
-  const pathname = usePathname();
   const { user, isLoading } = useAuth();
 
   useEffect(() => {
-    if (!isLoading) {
-      const locale = pathname?.split('/')[1] || 'en';
-      if (user) {
-        const isAdmin = user.user_metadata?.role === 'super_admin' || user.email?.endsWith('@nyikasafaris.com');
-        router.replace(`/${locale}${isAdmin ? '/admin/dashboard' : '/account/dashboard'}`);
-      } else {
-        router.replace(`/${locale}/auth/signin`);
-      }
-    }
-  }, [user, isLoading, pathname, router]);
+    // Only run on client side
+    if (typeof window === 'undefined') return;
 
+    // If still loading auth state, do nothing
+    if (isLoading) return;
+
+    const currentPath = window.location.pathname;
+    const locale = currentPath.split('/')[1] || 'en';
+
+    // If not logged in, redirect to sign in
+    if (!user) {
+      if (!currentPath.includes('/auth/signin')) {
+        window.location.href = `/${locale}/auth/signin?redirectedFrom=${encodeURIComponent(currentPath)}`;
+      }
+      return;
+    }
+
+    // If logged in, determine the correct dashboard
+    const isAdmin = user.email?.endsWith('@nyika.co.tz');
+    const dashboardPath = isAdmin ? '/admin/dashboard' : '/account/dashboard';
+    const targetPath = `/${locale}${dashboardPath}`;
+
+    // Only redirect if we're not already on the target page
+    if (!currentPath.startsWith(targetPath)) {
+      window.location.href = targetPath;
+    }
+  }, [user, isLoading]);
+
+  // Simple loading spinner
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="flex flex-col items-center gap-4">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="text-muted-foreground">Redirecting to your dashboard...</p>
-      </div>
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }

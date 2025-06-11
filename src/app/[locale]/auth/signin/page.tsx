@@ -1,102 +1,193 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useState, ChangeEvent, FormEvent } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
-import { AuthForm } from '@/components/auth/AuthForm';
-import { useToast } from '@/components/ui/use-toast';
-import { Loader2 } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+import { Icons } from '@/components/icons';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import Link from 'next/link';
+
+interface FormData {
+  email: string;
+  password: string;
+}
 
 export default function SignInPage() {
-  const router = useRouter();
-  const { user, isLoading, error, signIn, signInWithOAuth } = useAuth();
   const searchParams = useSearchParams();
-  const { toast } = useToast();
+  const { user, isLoading, error, signIn, signInWithOAuth } = useAuth();
+  
   const [hasMounted, setHasMounted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState<FormData>({ 
+    email: '', 
+    password: '' 
+  });
+  
   const urlError = searchParams?.get('error');
+  const locale = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] || 'en' : 'en';
 
-  // Set mounted state to prevent hydration issues
+  // Set mounted state on client
   useEffect(() => {
     setHasMounted(true);
   }, []);
 
-  // Get current locale from URL
-  const locale = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : 'en';
-  
-  // Redirect if already signed in
+  // Handle redirect after successful login or when user is already authenticated
   useEffect(() => {
     if (user && hasMounted && !isLoading) {
-      // Check if there's a redirect URL in the query params
-      const redirectTo = searchParams?.get('redirectedFrom') || `/${locale}/dashboard`;
+      // Get the redirect path, default to dashboard
+      let redirectTo = searchParams?.get('redirectedFrom') || `/${locale}/dashboard`;
       
-      // Ensure the URL has the correct locale
-      const redirectUrl = redirectTo.startsWith(`/${locale}/`) 
-        ? redirectTo 
-        : `/${locale}${redirectTo.startsWith('/') ? '' : '/'}${redirectTo}`;
+      // Ensure we have a valid path
+      if (!redirectTo.startsWith('/')) {
+        redirectTo = `/${redirectTo}`;
+      }
       
-      router.push(redirectUrl);
+      // Ensure the path starts with the locale
+      const pathSegments = redirectTo.split('/').filter(Boolean);
+      if (!['en', 'sw'].includes(pathSegments[0])) {
+        redirectTo = `/${locale}${redirectTo}`;
+      }
+      
+      // Clean up any potential double slashes
+      redirectTo = redirectTo.replace(/([^:]\/)\/+/g, '$1');
+      
+      // Prevent redirecting to auth pages
+      if (redirectTo.includes('/auth/')) {
+        redirectTo = `/${locale}/dashboard`;
+      }
+      
+      // Only redirect if we're not already on the target path
+      if (window.location.pathname !== redirectTo) {
+        window.location.href = redirectTo;
+      }
     }
-  }, [user, hasMounted, isLoading, router, locale, searchParams]);
+  }, [user, hasMounted, isLoading, locale, searchParams]);
 
-  // Show error toast if there's an error
+  // Handle auth errors
   useEffect(() => {
-    if (error || urlError) {
+    if (error) {
       toast({
         title: 'Error',
-        description: error || urlError,
+        description: error,
         variant: 'destructive',
       });
     }
-  }, [error, urlError, toast]);
+  }, [error]);
 
-  // Handle error messages from URL
+  // Handle OAuth errors from URL
   useEffect(() => {
-    const urlError = searchParams?.get('error');
     if (urlError) {
       toast({
-        variant: 'destructive',
         title: 'Authentication Error',
-        description: urlError,
+        description: urlError === 'OAuthAccountNotLinked' 
+          ? 'This email is already associated with another account. Please sign in with the original provider.'
+          : 'Failed to sign in. Please try again.',
+        variant: 'destructive',
       });
       
-      // Clean up the error from URL without causing a redirect
-      const cleanUrl = new URL(window.location.href);
-      cleanUrl.searchParams.delete('error');
-      window.history.replaceState({}, '', cleanUrl.toString());
+      // Clean up the URL
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('error');
+      window.history.replaceState({}, '', newUrl.toString());
     }
-  }, [searchParams, toast]);
-
-  const handleAuthStateChange = useCallback((isLoading: boolean) => {
-    setIsSubmitting(isLoading);
+  }, [urlError]);
+  
+  const handleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   }, []);
+  
+  const handleSubmit = useCallback(async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
+    try {
+      // Get the current locale from the URL
+      const currentLocale = window.location.pathname.split('/')[1] || 'en';
+      let redirectTo = searchParams?.get('redirectedFrom') || `/${currentLocale}/dashboard`;
+      
+      // Ensure the redirect path includes the locale
+      if (!redirectTo.startsWith(`/${currentLocale}/`)) {
+        redirectTo = `/${currentLocale}${redirectTo.startsWith('/') ? '' : '/'}${redirectTo}`;
+      }
+      
+      sessionStorage.setItem('auth_redirect', redirectTo);
+      
+      const { error } = await signIn(formData.email, formData.password);
+      
+      if (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Authentication failed',
+          description: error,
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'An error occurred',
+        description: error instanceof Error ? error.message : 'Please try again later.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [formData.email, formData.password, isSubmitting, searchParams, signIn]);
+  
+  const handleOAuthSignIn = useCallback(async (provider: 'google' | 'github') => {
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
+    try {
+      // Get the current locale from the URL
+      const currentLocale = window.location.pathname.split('/')[1] || 'en';
+      let redirectTo = searchParams?.get('redirectedFrom') || `/${currentLocale}/dashboard`;
+      
+      // Ensure the redirect path includes the locale
+      if (!redirectTo.startsWith(`/${currentLocale}/`)) {
+        redirectTo = `/${currentLocale}${redirectTo.startsWith('/') ? '' : '/'}${redirectTo}`;
+      }
+      
+      sessionStorage.setItem('oauth_redirect', redirectTo);
+      
+      const { error } = await signInWithOAuth(provider);
+      
+      if (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Authentication failed',
+          description: error,
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'An error occurred',
+        description: error instanceof Error ? error.message : 'Please try again later.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [isSubmitting, searchParams, signInWithOAuth]);
 
-  // Show loading state while checking auth or if not mounted yet
-  if (!hasMounted || isLoading) {
+  if (!hasMounted) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <Icons.spinner className="h-8 w-8 animate-spin" />
       </div>
     );
   }
   
-  // Show loading state while form is submitting
-  if (isSubmitting) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-sm text-muted-foreground">Signing you in...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // If user is already authenticated, the AuthProvider will handle the redirect
-  if (user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <Icons.spinner className="h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -105,20 +196,106 @@ export default function SignInPage() {
     <div className="container relative flex h-screen flex-col items-center justify-center">
       <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[400px] px-4">
         <div className="flex flex-col space-y-2 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">
+          <Icons.logo className="mx-auto h-12 w-12" />
+          <h1 className="text-2xl font-bold tracking-tight">
             Welcome to Nyika Safaris
           </h1>
           <p className="text-muted-foreground">
             Sign in to your account to continue
           </p>
         </div>
+        
         <div className="bg-card p-6 rounded-lg border shadow-sm">
-          <AuthForm 
-            mode="signin" 
-            onLoadingStateChange={handleAuthStateChange}
-            onSignInWithOAuth={signInWithOAuth}
-            onSignInWithEmail={signIn}
-          />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="name@example.com"
+                autoCapitalize="none"
+                autoComplete="email"
+                autoCorrect="off"
+                disabled={isLoading || isSubmitting}
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                autoComplete="current-password"
+                disabled={isLoading || isSubmitting}
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isLoading || isSubmitting}
+            >
+              {(isLoading || isSubmitting) ? (
+                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Icons.logo className="mr-2 h-4 w-4" />
+              )}
+              Sign In
+            </Button>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => handleOAuthSignIn('google')}
+              disabled={isLoading || isSubmitting}
+              className="w-full"
+            >
+              {isLoading || isSubmitting ? (
+                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Icons.google className="mr-2 h-4 w-4" />
+              )}
+              Continue with Google
+            </Button>
+          </form>
+          
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            <span className="mr-1">Don&apos;t have an account?</span>
+            <Link
+              href="/auth/register"
+              className="font-medium text-primary hover:underline"
+            >
+              Sign up
+            </Link>
+          </p>
         </div>
       </div>
     </div>

@@ -1,46 +1,19 @@
-import { getTranslations } from 'next-intl/server';
 import { Suspense } from 'react';
-import { createServerClient } from '@/lib/supabase/server';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { TourDetail } from '@/components/tours/TourDetail';
-import type { Tour } from '@/types/tour';
-
-export const dynamic = 'force-dynamic';
+import { getTourBySlug } from '@/lib/supabase/tours';
+import { notFound } from 'next/navigation';
 
 export async function generateMetadata({
   params,
 }: {
   params: { slug: string; locale: string };
 }) {
-  const supabase = createServerClient();
+  const tour = await getTourBySlug(params.slug);
   
-  const { data: tour } = await supabase
-    .from('tours')
-    .select('*')
-    .eq('slug', params.slug)
-    .single();
-
-  if (!tour) {
-    return {
-      title: 'Tour Not Found',
-    };
-  }
-
   return {
-    title: `${tour.title} | Nyika Safaris`,
-    description: tour.description,
-    openGraph: {
-      title: tour.title,
-      description: tour.description,
-      images: [
-        {
-          url: tour.coverImage || tour.images?.[0] || '',
-          width: 1200,
-          height: 630,
-          alt: tour.title,
-        },
-      ],
-    },
+    title: tour?.title || 'Tour Details',
+    description: tour?.summary || 'Tour details page',
   };
 }
 
@@ -49,45 +22,23 @@ export default async function TourPage({
 }: {
   params: { slug: string; locale: string };
 }) {
-  const t = await getTranslations('TourPage');
-  const supabase = createServerClient();
-  
-  const { data: tour, error } = await supabase
-    .from('tours')
-    .select('*')
-    .eq('slug', params.slug)
-    .single();
+  try {
+    // Fetch tour data using the shared function
+    const tour = await getTourBySlug(params.slug);
+    
+    if (!tour) {
+      notFound();
+    }
 
-  if (error || !tour) {
     return (
-      <div className="container mx-auto py-12 text-center">
-        <h1 className="text-2xl font-bold">{t('notFound')}</h1>
-        <p className="mt-4">{t('tourNotFound')}</p>
-      </div>
+      <Suspense fallback={<PageLoader />}>
+        <TourDetail tour={tour} />
+      </Suspense>
     );
+  } catch (error) {
+    console.error('Error in TourPage:', error);
+    notFound();
   }
-
-  return (
-    <Suspense fallback={<PageLoader />}>
-      <TourDetail tour={tour as Tour} />
-    </Suspense>
-  );
 }
 
-// For static generation, we'll use ISR (Incremental Static Regeneration)
-// instead of pre-generating all possible pages at build time
-// This function will be called at runtime when a page is requested
-// and the result will be cached for future requests
-export const dynamicParams = true; // Enable dynamic params for ISR
-
-export async function generateStaticParams() {
-  // Return an empty array to disable pre-generation of all pages at build time
-  // This will make Next.js fall back to on-demand generation with ISR
-  return [];
-  
-  // If you want to pre-generate specific pages, you can return them here:
-  // return [
-  //   { slug: 'popular-tour-1' },
-  //   { slug: 'popular-tour-2' },
-  // ];
-}
+// Configuration is in config.ts

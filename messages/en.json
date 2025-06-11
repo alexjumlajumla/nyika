@@ -85,5 +85,28 @@
       "role": "Role",
       "notProvided": "Not provided"
     }
+  },
+  "TourPage": {
+    "notFound": "Tour Not Found",
+    "tourNotFound": "The requested tour could not be found. Please check the URL and try again.",
+    "overview": "Tour Overview",
+    "itinerary": "Itinerary",
+    "included": "What's Included",
+    "notIncluded": "Not Included",
+    "priceFrom": "From",
+    "duration": "Duration",
+    "days": "{count, plural, one {day} other {days}}",
+    "bookNow": "Book Now",
+    "enquireNow": "Enquire Now",
+    "highlights": "Tour Highlights",
+    "accommodation": "Accommodation",
+    "meals": "Meals",
+    "transport": "Transport",
+    "groupSize": "Group Size",
+    "difficulty": "Difficulty",
+    "season": "Best Season",
+    "startingPoint": "Starting Point",
+    "endingPoint": "Ending Point",
+    "downloadItinerary": "Download Full Itinerary"
   }
 }

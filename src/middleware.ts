@@ -1,18 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createServerClient } from './lib/supabase/server';
+import { createServerClient } from '@supabase/ssr';
 
-// Define locale types
-const locales = ['en', 'sw'] as const;
-type Locale = 'en' | 'sw';
-const defaultLocale: Locale = 'en';
-
-// Check if a locale is valid
-const isValidLocale = (locale: string): locale is Locale => {
-  return (locales as readonly string[]).includes(locale);
-};
-
-// List of public paths that don't require authentication
+// List of public paths that don't require authentication (without locale prefix)
 const publicPaths = [
   '/',
   '/signin',
@@ -28,280 +18,217 @@ const publicPaths = [
   '/contact',
   '/privacy',
   '/terms',
-  '/api',
-  '/_next',
-  '/static',
-  '/favicon.ico',
-  '/images',
-  '/fonts',
-  '/auth/signin',
-  '/auth/signup',
-  '/auth/forgot-password',
-  '/auth/reset-password',
   '/unauthorized',
   '/error',
   '/500',
-  '/404'
+  '/404',
+  '/auth/signin',
+  '/auth/signup',
+  '/auth/forgot-password',
+  '/auth/reset-password'
+];
+
+// Paths that should be excluded from locale prefixing and authentication
+const excludedPaths = [
+  '/api',
+  '/_next',
+  '/static',
+  '/images',
+  '/fonts',
+  '/favicon.ico',
+  '/auth/callback'
 ];
 
 // Check if the current path is public
-const isPublicPath = (path: string): boolean => {
-  // Exact match
-  if (publicPaths.includes(path)) return true;
+function isPublicPath(path: string): boolean {
+  // Handle root path
+  if (path === '/') return true;
   
-  // Dynamic routes match
-  if (
-    path.startsWith('/tours/') || 
-    path.startsWith('/blog/') ||
-    path.startsWith('/destinations/') ||
-    path.startsWith('/attractions/') ||
-    path.startsWith('/accommodations/') ||
-    path.startsWith('/api/') ||
-    path.startsWith('/_next/') ||
-    path.startsWith('/static/') ||
-    path.endsWith('.ico') ||
-    path.endsWith('.png') ||
-    path.endsWith('.jpg') ||
-    path.endsWith('.jpeg') ||
-    path.endsWith('.gif') ||
-    path.endsWith('.svg') ||
-    path.endsWith('.css') ||
-    path.endsWith('.js') ||
-    path.endsWith('.json') ||
-    path.endsWith('.webmanifest')
-  ) {
+  // Remove leading slash and split into segments
+  const segments = path.replace(/^\//, '').split('/');
+  const hasLocale = segments.length > 0 && ['en', 'sw'].includes(segments[0]);
+  const pathWithoutLocale = hasLocale ? '/' + segments.slice(1).join('/') : path;
+  
+  // Check exact matches (with or without locale)
+  if (publicPaths.includes(path) || publicPaths.includes(pathWithoutLocale)) {
     return true;
   }
-  
-  // Check for locale paths (e.g., /en, /es, etc.)
-  const segments = path.split('/').filter(Boolean);
-  if (segments.length > 0 && isValidLocale(segments[0])) {
-    const pathWithoutLocale = '/' + segments.slice(1).join('/');
-    return (
-      publicPaths.includes(pathWithoutLocale) || 
-      pathWithoutLocale === '' || 
-      pathWithoutLocale === '/' ||
-      pathWithoutLocale.startsWith('/tours/') ||
-      pathWithoutLocale.startsWith('/blog/')
-    );
-  }
-  
-  return false;
-};
 
-// Handle locale detection and redirection
-const handleLocaleRedirection = (req: NextRequest, path: string) => {
-  // Check if path already has a valid locale
-  const pathnameHasLocale = locales.some(
-    (locale) => path.startsWith(`/${locale}/`) || path === `/${locale}`
+  // Check dynamic public routes (with or without locale)
+  const publicRoutePatterns = [
+    /^(\/[a-z]{2})?\/tours\/.*/,
+    /^(\/[a-z]{2})?\/blog\/.*/,
+    /^(\/[a-z]{2})?\/destinations\/.*/,
+    /^(\/[a-z]{2})?\/attractions\/.*/,
+    /^(\/[a-z]{2})?\/accommodations\/.*/,
+    /^\/api\/.*/,
+    /^\/_next\/.*/,
+    /^\/static\/.*/,
+    /\.(ico|png|jpg|jpeg|gif|svg|css|js|json|webmanifest)$/i
+  ];
+
+  return publicRoutePatterns.some(pattern => 
+    pattern.test(path) || pattern.test(pathWithoutLocale)
   );
+}
 
-  if (pathnameHasLocale) {
-    return null;
-  }
+// Check if path should be excluded from locale handling
+function isExcludedPath(path: string): boolean {
+  return excludedPaths.some(excluded => 
+    path === excluded || path.startsWith(`${excluded}/`)
+  );
+}
 
-  // Extract the first segment as the potential locale
+// Function to ensure a path has a valid locale prefix
+function ensureLocalePath(path: string, defaultLocale: string = 'en'): string {
   const segments = path.split('/').filter(Boolean);
-  const potentialLocale = segments[0];
-
-  // If the first segment is a valid locale, no redirection needed
-  if (potentialLocale && isValidLocale(potentialLocale)) {
-    return null;
-  }
-
-  // Get the preferred locale from cookie or Accept-Language header
-  const cookieLocale = req.cookies.get('NEXT_LOCALE')?.value;
-  let preferredLocale: Locale = 'en'; // Default to 'en'
   
-  // Try to use the locale from cookie first
-  if (cookieLocale === 'en' || cookieLocale === 'sw') {
-    preferredLocale = cookieLocale;
-  } else {
-    // Fall back to Accept-Language header
-    const acceptLanguage = req.headers.get('accept-language');
-    
-    if (acceptLanguage) {
-      const preferred = acceptLanguage
-        .split(',')
-        .map((lang) => {
-          const [locale] = lang.trim().split(';');
-          return locale.split('-')[0];
-        })
-        .find((locale): locale is Locale => 
-          locale === 'en' || locale === 'sw'
-        );
-      
-      if (preferred) {
-        preferredLocale = preferred;
-      }
-    }
+  // If the path is empty or already has a valid locale, return as is
+  if (path === '/' || path === '') {
+    return `/${defaultLocale}`;
   }
   
-  // Create the new URL with the preferred locale
-  const newUrl = new URL(`/${preferredLocale}${path}`, req.url);
-  newUrl.search = req.nextUrl.search;
+  // Check if first segment is a valid locale
+  if (segments.length > 0 && ['en', 'sw'].includes(segments[0])) {
+    return path;
+  }
   
-  return NextResponse.redirect(newUrl);
-};
+  // Add default locale if needed
+  return `/${defaultLocale}${path.startsWith('/') ? '' : '/'}${path}`;
+}
 
-// Main middleware function
-export default async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  
-  // Skip middleware for API routes and static files
-  if (
-    !pathname ||
-    pathname.startsWith('/api/') || 
-    pathname.startsWith('/_next/') || 
-    pathname.includes('.') ||
-    pathname === '/favicon.ico' ||
-    pathname === '/site.webmanifest'
-  ) {
+export async function middleware(request: NextRequest) {
+  const { pathname, search } = request.nextUrl;
+  const path = pathname.split('?')[0];
+  const segments = pathname.split('/').filter(Boolean);
+  const hasValidLocale = segments.length > 0 && ['en', 'sw'].includes(segments[0]);
+  const defaultLocale = 'en';
+  const currentLocale = hasValidLocale ? segments[0] : defaultLocale;
+
+  // Skip middleware for excluded paths (API, _next, static files, etc.)
+  if (isExcludedPath(path)) {
     return NextResponse.next();
   }
-  
-  // Handle root path
-  if (pathname === '/' || pathname === '') {
-    // Get the preferred locale from the cookie or Accept-Language header
-    const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
-    const acceptLanguage = request.headers.get('accept-language');
-    let locale: Locale = defaultLocale;
-    
-    // Try to get locale from cookie first
-    if (cookieLocale === 'en' || cookieLocale === 'sw') {
-      locale = cookieLocale;
-    } 
-    // Fall back to Accept-Language header
-    else if (acceptLanguage) {
-      const preferred = acceptLanguage
-        .split(',')
-        .map((lang) => {
-          const [loc] = lang.trim().split(';');
-          return loc.split('-')[0];
-        })
-        .find((loc): loc is Locale => 
-          loc === 'en' || loc === 'sw'
-        );
-      
-      if (preferred) {
-        locale = preferred;
-      }
+
+  // Handle root path - redirect to default locale with trailing slash
+  if (path === '/') {
+    const newUrl = new URL(request.url);
+    newUrl.pathname = `/${defaultLocale}/`;
+    return NextResponse.redirect(newUrl);
+  }
+
+  // Check if this is a public path
+  if (isPublicPath(path)) {
+    // If it's a public path but doesn't have a locale, add it
+    if (!hasValidLocale) {
+      const newUrl = new URL(request.url);
+      newUrl.pathname = ensureLocalePath(path, defaultLocale);
+      return NextResponse.redirect(newUrl);
     }
-    
-    // Redirect to the localized home page
-    const url = new URL(`/${locale}`, request.url);
-    return NextResponse.redirect(url);
-  }
-  
-  // Handle locale redirection for the current request
-  const localeRedirect = handleLocaleRedirection(request, pathname);
-  if (localeRedirect) {
-    return localeRedirect;
-  }
-  
-  // Skip files that don't need authentication
-  if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
-  
-  try {
-    // Create a Supabase client
-    const supabase = await createServerClient();
-    
-    // Get the session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    // If there's an error getting the session, log it but don't block the request
-    if (sessionError) {
-      // Log the error in development only
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.error('Error getting session:', sessionError);
-      }
-      // Continue to the next middleware instead of blocking
+
+  // Handle auth paths
+  if (path.startsWith('/auth/') || path === '/auth') {
+    // Special handling for OAuth callback
+    if (path.includes('/auth/callback')) {
       return NextResponse.next();
     }
     
-    // If no session, redirect to sign in
-    if (!session) {
-      // Don't redirect if we're already on the signin page to avoid loops
-      if (pathname === '/auth/signin' || pathname === '/auth/signup') {
-        return NextResponse.next();
+    // For sign-in page, clean up invalid redirects
+    if (path.includes('/auth/signin')) {
+      const redirectTo = request.nextUrl.searchParams.get('redirectedFrom');
+      if (redirectTo) {
+        const cleanUrl = new URL(request.url);
+        // If redirectedFrom is invalid, set a default dashboard path
+        if (redirectTo.includes('/auth/') || !redirectTo.startsWith(`/${currentLocale}/`)) {
+          cleanUrl.searchParams.set('redirectedFrom', `/${currentLocale}/dashboard`);
+          return NextResponse.redirect(cleanUrl);
+        }
+      }
+    }
+    
+    // Ensure auth paths have a locale
+    if (!hasValidLocale) {
+      const newUrl = new URL(request.url);
+      newUrl.pathname = ensureLocalePath(path, defaultLocale);
+      return NextResponse.redirect(newUrl);
+    }
+    
+    return NextResponse.next();
+  }
+
+  try {
+    const response = NextResponse.next();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value;
+          },
+          set(name: string, value: string, options: any) {
+            request.cookies.set({
+              name,
+              value,
+              ...options,
+            });
+            response.cookies.set({
+              name,
+              value,
+              ...options,
+            });
+          },
+          remove(name: string) {
+            request.cookies.delete(name);
+            response.cookies.delete(name);
+          },
+        },
+      }
+    );
+
+    // Get the session
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    // If there's an error or no session, redirect to sign-in with locale
+    if (error || !session) {
+      // Extract locale from the URL or default to 'en'
+      const locale = pathname.split('/')[1] || 'en';
+      const signInPath = `/${locale}/auth/signin`;
+      
+      const redirectUrl = new URL(signInPath, request.url);
+      
+      // Only set redirectedFrom if it's not already a sign-in path to prevent loops
+      if (!path.includes('/auth/signin')) {
+        redirectUrl.searchParams.set('redirectedFrom', path + search);
       }
       
-      const url = new URL('/auth/signin', request.url);
-      // Only set redirectedFrom if it's not already a signin/signup page
-      if (!pathname.startsWith('/auth/')) {
-        url.searchParams.set('redirectedFrom', pathname);
-      }
-      return NextResponse.redirect(url);
+      return NextResponse.redirect(redirectUrl);
     }
-    
-    // If the path is an admin path, check if the user is an admin
-    if (pathname.startsWith('/dashboard/admin')) {
-      try {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-          
-        if (profileError) {
-          // Log the error in development only
-          if (process.env.NODE_ENV === 'development') {
-            // eslint-disable-next-line no-console
-            console.error('Error fetching profile:', profileError);
-          }
-          throw profileError;
-        }
-          
-        if (profile?.role !== 'admin') {
-          return NextResponse.redirect(new URL('/unauthorized', request.url));
-        }
-      } catch (error) {
-        // Log the error in development only
-        if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
-          console.error('Admin check error:', error);
-        }
-        // If there's an error checking admin status, redirect to home
-        return NextResponse.redirect(new URL('/', request.url));
-      }
+
+    // Check admin access for admin routes
+    if (path.startsWith('/admin') && !session.user.email?.endsWith('@nyika.co.tz')) {
+      return NextResponse.redirect(new URL('/unauthorized', request.url));
     }
-    
-    // If we get here, the user is authenticated and has the correct role
-    return NextResponse.next();
+
+    return response;
   } catch (error) {
-    // Log the error in development only
-    if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
-      console.error('Authentication error:', error);
-    }
-    // In case of error, redirect to sign in as a fallback
-    const url = new URL('/auth/signin', request.url);
-    return NextResponse.redirect(url);
+    console.error('Middleware error:', error);
+    const redirectUrl = new URL('/error', request.url);
+    redirectUrl.searchParams.set('error', 'auth_error');
+    return NextResponse.redirect(redirectUrl);
   }
 }
 
 export const config = {
   matcher: [
-    // Match all pathnames except:
-    // - API routes
-    // - Static files
-    // - _next/static
-    // - _next/image
-    // - favicon.ico
-    '/((?!api|_next/static|_next/image|favicon.ico|site.webmanifest|.*\.(?:ico|png|jpg|jpeg|gif|svg|css|js|json|webmanifest)$).*)',
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|css|js|json|ico$)).*)',
   ],
 };
-
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace NodeJS {
-    interface ProcessEnv {
-      NEXT_PUBLIC_SUPABASE_URL: string;
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
-    }
-  }
-}
-

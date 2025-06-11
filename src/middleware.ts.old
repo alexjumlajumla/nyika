@@ -1,0 +1,185 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
+declare global {
+  interface Window {
+    ENV: {
+      NEXT_PUBLIC_SUPABASE_URL: string;
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
+    };
+  }
+}
+
+// Define locale types
+const locales = ['en', 'sw'] as const;
+type Locale = 'en' | 'sw';
+const defaultLocale: Locale = 'en';
+
+// Check if a locale is valid
+const isValidLocale = (locale: string): locale is Locale => {
+  return (locales as readonly string[]).includes(locale);
+};
+
+// List of public paths that don't require authentication
+const publicPaths = [
+  '/',
+  '/signin',
+  '/signup',
+  '/forgot-password',
+  '/reset-password',
+  '/destinations',
+  '/tours',
+  '/attractions',
+  '/accommodations',
+  '/blog',
+  '/about',
+  '/contact',
+  '/privacy',
+  '/terms',
+  '/api',
+  '/_next',
+  '/static',
+  '/favicon.ico',
+  '/images',
+  '/fonts',
+  '/auth/signin',
+  '/auth/signup',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/auth/callback',
+  '/auth/confirm',
+  '/unauthorized',
+  '/error',
+  '/500',
+  '/404'
+];
+
+// Check if the current path is public
+const isPublicPath = (path: string): boolean => {
+  // Remove locale prefix if exists
+  const pathWithoutLocale = path.replace(/^\/(en|sw)/, '');
+  
+  // Check exact matches
+  if (publicPaths.includes(pathWithoutLocale) || publicPaths.includes(path)) {
+    return true;
+  }
+
+  // Check dynamic routes
+  const publicRoutePatterns = [
+    /^\/tours\/.*/,
+    /^\/blog\/.*/,
+    /^\/destinations\/.*/,
+    /^\/attractions\/.*/,
+    /^\/accommodations\/.*/,
+    /^\/api\/.*/,
+    /^\/_next\/.*/,
+    /^\/static\/.*/,
+    /\.(ico|png|jpg|jpeg|gif|svg|css|js|json|webmanifest)$/i
+  ];
+
+  return publicRoutePatterns.some(pattern => 
+    pattern.test(path) || pattern.test(pathWithoutLocale)
+  );
+};
+
+// Main middleware function
+export async function middleware(request: NextRequest) {
+  const { pathname, search } = request.nextUrl;
+  const path = pathname.split('?')[0];
+
+  // Skip middleware for public paths
+  if (isPublicPath(path)) {
+    return NextResponse.next();
+  }
+
+  try {
+    // Create a Supabase client with cookie handling
+    const cookieStore = cookies();
+    
+    // Create a response that we can modify
+    const response = NextResponse.next();
+    
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          set(name: string, value: string, options: any) {
+            response.cookies.set({
+              name,
+              value,
+              ...options,
+              path: '/',
+              sameSite: 'lax',
+              secure: process.env.NODE_ENV === 'production',
+            });
+          },
+          remove(name: string, options: any) {
+            response.cookies.set({
+              name,
+              value: '',
+              ...options,
+              path: '/',
+              maxAge: 0,
+            });
+          },
+        },
+      }
+    );
+
+    // Get the session
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('Error getting session:', error);
+      return NextResponse.redirect(new URL('/auth/signin', request.url));
+    }
+
+    // If no session, redirect to signin with redirect URL
+    if (!session) {
+      const redirectUrl = new URL('/auth/signin', request.url);
+      redirectUrl.searchParams.set('redirectedFrom', path + search);
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    // If user is trying to access admin dashboard but is not an admin
+    if (path.startsWith('/admin') && !session.user.email?.endsWith('@nyika.co.tz')) {
+      return NextResponse.redirect(new URL('/unauthorized', request.url));
+    }
+
+    // Continue with the request
+    return response;
+  } catch (error) {
+    console.error('Middleware error:', error);
+    return NextResponse.redirect(new URL('/error', request.url));
+  }
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp|css|js|json|ico$)).*)',
+  ],
+};
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace NodeJS {
+    interface ProcessEnv {
+      NEXT_PUBLIC_SUPABASE_URL: string;
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
+    }
+  }
+}
+

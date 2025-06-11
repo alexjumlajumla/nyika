@@ -67,5 +67,28 @@
       "role": "Jukumu",
       "notProvided": "Haijatolewa"
     }
+  },
+  "TourPage": {
+    "notFound": "Safari Haikupatikana",
+    "tourNotFound": "Safari uliyoita haipatikani. Tafadhali angalia anwani na ujaribu tena.",
+    "overview": "Ufupisho wa Safari",
+    "itinerary": "Itinerari",
+    "included": "Yaliyojumuishwa",
+    "notIncluded": "Haijumuishwi",
+    "priceFrom": "Kuanzia",
+    "duration": "Muda",
+    "days": "{count, plural, one {siku} other {siku}}",
+    "bookNow": "Hifadhi Sasa",
+    "enquireNow": "Uliza Sasa",
+    "highlights": "Vipengele Vya Kipekee Vya Safari",
+    "accommodation": "Malazi",
+    "meals": "Chakula",
+    "transport": "Usafiri",
+    "groupSize": "Ukubwa wa Kikundi",
+    "difficulty": "Ugomvi",
+    "season": "Msimu Bora",
+    "startingPoint": "Mahali Pa Kuanzia",
+    "endingPoint": "Mahali Pa Kumalizika",
+    "downloadItinerary": "Pakua Itinerari Kamili"
   }
 }

@@ -32,6 +32,7 @@ export default function TourCard({
   discount = 0,
   originalPrice,
 }: TourCardProps) {
+  // Format price and original price
   const formattedPrice = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
@@ -48,44 +49,29 @@ export default function TourCard({
       }).format(originalPrice)
     : null;
 
-  // Calculate rating percentage for potential future use
-  // const ratingPercentage = (ratingsAverage / 5) * 100;
+  // Format duration
   const formatDuration = (days: number) => {
     return days === 1 ? '1 Day' : `${days} Days`;
   };
 
-  const renderRatingStars = () => {
-    const stars = [];
-    const fullStars = Math.floor(ratingsAverage);
-    const hasHalfStar = ratingsAverage % 1 >= 0.5;
-    
-    for (let i = 1; i <= 5; i++) {
-      if (i <= fullStars) {
-        stars.push(<FiStar key={i} className="text-yellow-400 fill-current" />);
-      } else if (i === fullStars + 1 && hasHalfStar) {
-        stars.push(<FiStar key={i} className="text-yellow-400 fill-current opacity-50" />);
-      } else {
-        stars.push(<FiStar key={i} className="text-gray-300" />);
-      }
-    }
-    
-    return stars;
-  };
-
+  // Format rating
   const formattedRating = ratingsAverage?.toFixed(1) || '0.0';
   const ratingCount = ratingsQuantity || 0;
+  const hasRating = ratingsAverage > 0;
+  const firstDestination = destinations[0] || 'Safari Destination';
 
   return (
-    <Link href={`/tours/${slug}`} className="group block">
-      <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
-        <div className="relative h-48">
+    <Link href={`/tours/${slug}`} className="group block h-full">
+      <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
+        {/* Image with overlay badges */}
+        <div className="relative h-48 w-full">
           <Image
-            src={imageCover}
-            alt={title}
+            src={imageCover || '/images/placeholder-tour.jpg'}
+            alt={`${title} - ${firstDestination} tour`}
             fill
-            className="object-cover"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            priority
+            priority={false}
           />
           {isFeatured && (
             <div className="absolute top-2 left-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded">
@@ -98,58 +84,62 @@ export default function TourCard({
             </div>
           )}
         </div>
-        <div className="p-4">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="font-bold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">
-              {title}
-            </h3>
-            <div className="flex items-center text-sm text-gray-600">
-              <FiClock className="mr-1" />
-              <span>{formatDuration(duration)}</span>
+        
+        {/* Card content */}
+        <div className="p-4 flex flex-col flex-grow">
+          {/* Title */}
+          <h3 className="font-semibold text-lg mb-2 line-clamp-2" style={{ minHeight: '3.5rem' }}>
+            {title}
+          </h3>
+          
+          {/* Location/Destination */}
+          {firstDestination && (
+            <div className="flex items-center text-gray-600 text-sm mb-3">
+              <FiMapPin className="mr-1 flex-shrink-0" />
+              <span className="truncate">{firstDestination}</span>
             </div>
-          </div>
+          )}
           
-          <div className="flex items-center mb-2">
-            <div className="flex">
-              {renderRatingStars()}
-            </div>
-            <span className="ml-2 text-sm text-gray-600">
-              {formattedRating} ({ratingCount} {ratingCount === 1 ? 'review' : 'reviews'})
-            </span>
-          </div>
-          
-          <div className="flex items-center text-sm text-gray-600 mb-3">
-            <FiMapPin className="mr-1" />
-            <span>{destinations.join(', ')}</span>
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <div>
-              {discount > 0 && originalPrice ? (
-                <div className="flex items-baseline">
-                  <span className="text-lg font-bold text-red-600">
-                    {formattedPrice}
-                  </span>
-                  <span className="ml-2 text-sm text-gray-500 line-through">
-                    {formattedOriginalPrice}
-                  </span>
-                </div>
-              ) : (
-                <span className="text-lg font-bold text-gray-900">
-                  {formattedPrice}
+          {/* Rating */}
+          {hasRating && (
+            <div className="flex items-center text-sm text-gray-700 mb-3">
+              <div className="flex items-center mr-1">
+                <FiStar className="text-yellow-400 fill-current" />
+                <span className="ml-1 font-medium">{formattedRating}</span>
+              </div>
+              {ratingCount > 0 && (
+                <span className="text-gray-500 text-xs">
+                  ({ratingCount} {ratingCount === 1 ? 'review' : 'reviews'})
                 </span>
               )}
-              <span className="block text-xs text-gray-500">per person</span>
             </div>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                // Handle book now
-              }}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors"
-            >
-              Book Now
-            </button>
+          )}
+          
+          {/* Price and duration */}
+          <div className="mt-auto pt-2 border-t border-gray-100">
+            <div className="flex justify-between items-center mt-2">
+              <div className="text-sm text-gray-600 flex items-center">
+                <FiClock className="mr-1" />
+                {formatDuration(duration)}
+              </div>
+              <div className="text-right">
+                {formattedOriginalPrice ? (
+                  <div className="flex items-center">
+                    <span className="text-gray-400 line-through text-sm mr-2">
+                      {formattedOriginalPrice}
+                    </span>
+                    <span className="font-bold text-lg text-gray-900">
+                      {formattedPrice}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="font-bold text-lg text-gray-900">
+                    {formattedPrice}
+                  </span>
+                )}
+                <div className="text-xs text-gray-500">per person</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

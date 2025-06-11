@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { ThemeProvider } from 'next-themes';
 import { QueryClientProvider } from './QueryClientProvider';
 import { SupabaseProvider } from '../components/providers/SupabaseProvider';
+import { AuthProvider } from './NewAuthProvider';
 
 export interface AppProvidersProps {
   children: ReactNode;
@@ -34,7 +35,9 @@ export function AppProviders({ children }: AppProvidersProps) {
     >
       <QueryClientProvider>
         <SupabaseProvider>
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </SupabaseProvider>
       </QueryClientProvider>
     </ThemeProvider>
