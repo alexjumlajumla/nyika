@@ -27,13 +27,14 @@ export default function AccommodationDetailClient({ accommodation }: Accommodati
       {/* Image gallery */}
       <div className="mb-8">
         <div className="relative h-96 overflow-hidden rounded-lg">
-          {accommodation.images?.[0] ? (
+          {(accommodation.images?.[0] || accommodation.featured_image) ? (
             <Image
-              src={accommodation.images[0]}
+              src={accommodation.images?.[0] || accommodation.featured_image || ''}
               alt={accommodation.name}
               fill
               className="object-cover"
               priority
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gray-200">
@@ -41,6 +42,22 @@ export default function AccommodationDetailClient({ accommodation }: Accommodati
             </div>
           )}
         </div>
+        {/* Thumbnail gallery */}
+        {accommodation.images && accommodation.images.length > 1 && (
+          <div className="mt-4 grid grid-cols-4 gap-2">
+            {accommodation.images.slice(0, 4).map((image, index) => (
+              <div key={index} className="relative h-20 overflow-hidden rounded-md">
+                <Image
+                  src={image}
+                  alt={`${accommodation.name} - Image ${index + 1}`}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 25vw, 20vw"
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -49,12 +66,18 @@ export default function AccommodationDetailClient({ accommodation }: Accommodati
           <h1 className="mb-2 text-3xl font-bold">{accommodation.name}</h1>
           <div className="mb-4 flex items-center text-gray-600">
             <MapPin className="mr-1 h-5 w-5" />
-            <span>{accommodation.location}</span>
-            <div className="ml-4 flex items-center">
-              <Star className="mr-1 h-5 w-5 fill-current text-yellow-400" />
-              <span className="font-medium">{accommodation.rating}</span>
-              <span className="ml-1 text-gray-500">({accommodation.reviewCount} reviews)</span>
-            </div>
+            <span>
+              {accommodation.location.address}, {accommodation.location.city}, {accommodation.location.country}
+            </span>
+            {accommodation.rating !== null && accommodation.rating !== undefined && (
+              <div className="ml-4 flex items-center">
+                <Star className="mr-1 h-5 w-5 fill-current text-yellow-400" />
+                <span className="font-medium">{accommodation.rating.toFixed(1)}</span>
+                {accommodation.review_count && (
+                  <span className="ml-1 text-gray-500">({accommodation.review_count} reviews)</span>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="prose mb-8 max-w-none">
@@ -82,9 +105,21 @@ export default function AccommodationDetailClient({ accommodation }: Accommodati
         {/* Right column - Booking card */}
         <div>
           <div className="sticky top-4 rounded-lg bg-white p-6 shadow-md">
-            <div className="mb-4 flex items-baseline">
-              <span className="text-2xl font-bold">${accommodation.price}</span>
-              <span className="ml-1 text-sm text-gray-500">/ night</span>
+            <div className="mb-4">
+              <div className="flex items-baseline">
+                <span className="text-2xl font-bold">${accommodation.price_per_night || accommodation.price}</span>
+                <span className="ml-1 text-sm text-gray-500">/ night</span>
+              </div>
+              {accommodation.min_nights && (
+                <p className="mt-1 text-sm text-gray-500">
+                  Minimum stay: {accommodation.min_nights} {accommodation.min_nights === 1 ? 'night' : 'nights'}
+                </p>
+              )}
+              {accommodation.max_guests && (
+                <p className="mt-1 text-sm text-gray-500">
+                  Max {accommodation.max_guests} {accommodation.max_guests === 1 ? 'guest' : 'guests'}
+                </p>
+              )}
             </div>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">

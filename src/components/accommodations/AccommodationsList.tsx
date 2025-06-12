@@ -147,13 +147,19 @@ function AccommodationsList({ initialAccommodations }: AccommodationsListProps) 
     if (debouncedSearchQuery) {
       const query = debouncedSearchQuery.toLowerCase();
       result = result.filter(
-        (acc) =>
-          acc.name?.toLowerCase().includes(query) ||
-          (acc.location && typeof acc.location === 'string' && acc.location.toLowerCase().includes(query)) ||
-          (acc.description && typeof acc.description === 'string' && acc.description.toLowerCase().includes(query)) ||
-          (Array.isArray(acc.tags) && acc.tags.some(tag => 
-            typeof tag === 'string' && tag.toLowerCase().includes(query)
-          ))
+        (acc) => {
+          const locationString = acc.location ? 
+            `${acc.location.city || ''} ${acc.location.country || ''} ${acc.location.address || ''}`.toLowerCase() : '';
+            
+          return (
+            acc.name?.toLowerCase().includes(query) ||
+            locationString.includes(query) ||
+            (acc.description && typeof acc.description === 'string' && acc.description.toLowerCase().includes(query)) ||
+            (Array.isArray(acc.tags) && acc.tags.some(tag => 
+              typeof tag === 'string' && tag.toLowerCase().includes(query)
+            ))
+          );
+        }
       );
     }
 
@@ -164,7 +170,11 @@ function AccommodationsList({ initialAccommodations }: AccommodationsListProps) 
     if (filters.priceRange) {
       const [min, max] = filters.priceRange.split('-').map(Number);
       result = result.filter(
-        (acc) => acc.price_per_night >= min && acc.price_per_night <= max
+        (acc) => {
+          // Skip if price is not defined
+          if (acc.price === undefined || acc.price === null) return false;
+          return acc.price >= min && acc.price <= max;
+        }
       );
     }
 
@@ -177,9 +187,9 @@ function AccommodationsList({ initialAccommodations }: AccommodationsListProps) 
     result.sort((a, b) => {
       switch (filters.sortBy) {
         case 'price_asc':
-          return (a.price_per_night || 0) - (b.price_per_night || 0);
+          return (a.price || 0) - (b.price || 0);
         case 'price_desc':
-          return (b.price_per_night || 0) - (a.price_per_night || 0);
+          return (b.price || 0) - (a.price || 0);
         case 'rating_desc':
           return (b.rating || 0) - (a.rating || 0);
         case 'name_asc':
@@ -362,7 +372,11 @@ function AccommodationsList({ initialAccommodations }: AccommodationsListProps) 
                     </div>
                     <div className="flex items-center text-sm text-gray-500 mb-3">
                       <MapPin className="h-4 w-4 mr-1 text-gray-400 flex-shrink-0" />
-                      <span className="truncate">{accommodation.location || 'Location not specified'}</span>
+                      <span className="truncate">
+                        {accommodation.location 
+                          ? `${accommodation.location.city || ''}, ${accommodation.location.country || ''}`.replace(/, $/, '')
+                          : 'Location not specified'}
+                      </span>
                     </div>
                     <p className="text-sm text-gray-600 line-clamp-2 mb-4">
                       {accommodation.description}

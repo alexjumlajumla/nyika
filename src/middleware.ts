@@ -9,6 +9,7 @@ const publicPaths = [
   '/signup',
   '/forgot-password',
   '/reset-password',
+  '/verify-email',
   '/destinations',
   '/tours',
   '/attractions',
@@ -25,7 +26,9 @@ const publicPaths = [
   '/auth/signin',
   '/auth/signup',
   '/auth/forgot-password',
-  '/auth/reset-password'
+  '/auth/reset-password',
+  '/auth/verify-email',
+  '/auth/callback'
 ];
 
 // Paths that should be excluded from locale prefixing and authentication
@@ -98,12 +101,14 @@ function ensureLocalePath(path: string, defaultLocale: string = 'en'): string {
 }
 
 export async function middleware(request: NextRequest) {
-  const { pathname, search } = request.nextUrl;
+  const { pathname, search, searchParams } = request.nextUrl;
   const path = pathname.split('?')[0];
   const segments = pathname.split('/').filter(Boolean);
   const hasValidLocale = segments.length > 0 && ['en', 'sw'].includes(segments[0]);
   const defaultLocale = 'en';
   const currentLocale = hasValidLocale ? segments[0] : defaultLocale;
+  const callbackUrl = searchParams.get('callbackUrl') || '/';
+  const code = searchParams.get('code');
 
   // Skip middleware for excluded paths (API, _next, static files, etc.)
   if (isExcludedPath(path)) {
@@ -117,35 +122,42 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(newUrl);
   }
 
-  // Check if this is a public path
-  if (isPublicPath(path)) {
-    // If it's a public path but doesn't have a locale, add it
-    if (!hasValidLocale) {
-      const newUrl = new URL(request.url);
-      newUrl.pathname = ensureLocalePath(path, defaultLocale);
-      return NextResponse.redirect(newUrl);
-    }
+  // Handle OAuth callback
+  if (path.includes('/auth/callback')) {
     return NextResponse.next();
   }
 
-  // Handle auth paths
+  // Handle auth paths (signin, signup, forgot-password, reset-password, verify-email)
   if (path.startsWith('/auth/') || path === '/auth') {
-    // Special handling for OAuth callback
-    if (path.includes('/auth/callback')) {
-      return NextResponse.next();
-    }
-    
-    // For sign-in page, clean up invalid redirects
-    if (path.includes('/auth/signin')) {
-      const redirectTo = request.nextUrl.searchParams.get('redirectedFrom');
-      if (redirectTo) {
-        const cleanUrl = new URL(request.url);
-        // If redirectedFrom is invalid, set a default dashboard path
-        if (redirectTo.includes('/auth/') || !redirectTo.startsWith(`/${currentLocale}/`)) {
-          cleanUrl.searchParams.set('redirectedFrom', `/${currentLocale}/dashboard`);
-          return NextResponse.redirect(cleanUrl);
+    // If already authenticated and trying to access auth pages, redirect to home or callbackUrl
+    try {
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            get(name: string) {
+              return request.cookies.get(name)?.value;
+            },
+            set(name: string, value: string, options: any) {
+              request.cookies.set({ name, value, ...options });
+            },
+            remove(name: string) {
+              request.cookies.delete(name);
+            },
+          },
         }
+      );
+
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        // If user is already authenticated, redirect to home or callbackUrl
+        const redirectTo = new URL(callbackUrl || '/', request.url);
+        return NextResponse.redirect(redirectTo);
       }
+    } catch (error) {
+      console.error('Error checking auth status in middleware:', error);
     }
     
     // Ensure auth paths have a locale
@@ -155,6 +167,17 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(newUrl);
     }
     
+    return NextResponse.next();
+  }
+
+  // Check if this is a public path
+  if (isPublicPath(path)) {
+    // If it's a public path but doesn't have a locale, add it
+    if (!hasValidLocale) {
+      const newUrl = new URL(request.url);
+      newUrl.pathname = ensureLocalePath(path, defaultLocale);
+      return NextResponse.redirect(newUrl);
+    }
     return NextResponse.next();
   }
 
@@ -200,8 +223,8 @@ export async function middleware(request: NextRequest) {
       const redirectUrl = new URL(signInPath, request.url);
       
       // Only set redirectedFrom if it's not already a sign-in path to prevent loops
-      if (!path.includes('/auth/signin')) {
-        redirectUrl.searchParams.set('redirectedFrom', path + search);
+      if (!path.includes('/auth/')) {
+        redirectUrl.searchParams.set('callbackUrl', pathname + search);
       }
       
       return NextResponse.redirect(redirectUrl);
@@ -210,6 +233,35 @@ export async function middleware(request: NextRequest) {
     // Check admin access for admin routes
     if (path.startsWith('/admin') && !session.user.email?.endsWith('@nyika.co.tz')) {
       return NextResponse.redirect(new URL('/unauthorized', request.url));
+    }
+
+    // If user is authenticated, update the session to prevent timeout
+    if (session) {
+      const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.getSession();
+      
+      if (refreshError) {
+        console.error('Error refreshing session:', refreshError);
+        throw refreshError;
+      }
+      
+      if (refreshedSession) {
+        // Update the session in the response
+        response.cookies.set({
+          name: 'sb-access-token',
+          value: refreshedSession.access_token,
+          path: '/',
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+        });
+        
+        response.cookies.set({
+          name: 'sb-refresh-token',
+          value: refreshedSession.refresh_token,
+          path: '/',
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+        });
+      }
     }
 
     return response;

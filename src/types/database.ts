@@ -13,7 +13,9 @@ export type NewDestination = Insert<'destinations'>;
 export type DestinationUpdate = Update<'destinations'>;
 
 // Accommodations
-export type Accommodation = Row<'accommodations'> & {
+export type Accommodation = Omit<Row<'accommodations'>, 'price'> & {
+  price_per_night: number; // Map from price in database
+  price?: number; // Keep original price for backward compatibility
   rooms?: Room[];
   reviews?: AccommodationReview[];
   destination?: Destination;

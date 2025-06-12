@@ -32,7 +32,7 @@ const AccommodationCard = ({ accommodation, className }: AccommodationCardProps)
       <div className="relative aspect-[4/3] w-full overflow-hidden">
         <Link href={`/accommodations/${accommodation.slug}`}>
           <Image
-            src={accommodation.featured_image || accommodation.images?.[0] || '/images/placeholder-accommodation.jpg'}
+            src={accommodation.images?.[0] || '/images/placeholder-accommodation.jpg'}
             alt={accommodation.name}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -65,8 +65,10 @@ const AccommodationCard = ({ accommodation, className }: AccommodationCardProps)
         </div>
         
         <div className="mb-3 flex items-center text-sm text-gray-500">
-          <MapPin className="h-4 w-4" />
-          <span className="ml-1 line-clamp-1">{accommodation.location}</span>
+          <MapPin className="h-4 w-4 flex-shrink-0" />
+          <span className="ml-1 line-clamp-1">
+            {accommodation.location?.city}, {accommodation.location?.country}
+          </span>
         </div>
         
         <div className="mb-4 flex flex-wrap gap-1">
@@ -132,7 +134,7 @@ const AccommodationCard = ({ accommodation, className }: AccommodationCardProps)
           <div>
             <span className="text-sm text-gray-500">From</span>
             <div className="text-xl font-bold text-primary">
-              ${accommodation.price_per_night?.toLocaleString()}
+              ${accommodation.price?.toLocaleString()}
               <span className="text-sm font-normal text-gray-500"> / night</span>
             </div>
           </div>

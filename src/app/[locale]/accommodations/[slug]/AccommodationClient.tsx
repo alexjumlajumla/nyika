@@ -1,478 +1,308 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams } from 'next/navigation';
-import { MapPin, Loader2 } from 'lucide-react'; // Removed unused icons
-import { format } from 'date-fns';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { differenceInDays, addDays } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'; // Removed unused CardFooter
-// Removed unused Badge and Separator imports
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-// Removed unused Textarea and Select components
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
 
 // Types
-type BookingFormData = {
-  checkIn: Date | undefined;
-  checkOut: Date | undefined;
-  adults: number;
-  children: number;
-  roomType: string;
-  specialRequests: string;
+type DateRange = {
+  from: Date | null;
+  to: Date | null;
 };
 
-interface Room {
-  id: string;
+interface RoomType {
+  id: string | number;
   name: string;
+  description?: string;
+  base_price?: number;
+  max_occupancy?: number;
+  room_size?: number | null;
+  bed_type?: string | null;
+  amenities?: string[];
+  image_urls?: string[];
+  available_rooms?: number;
+}
+
+interface RoomWithAvailability extends Omit<RoomType, 'image_urls'> {
+  id: string;
   description: string;
-  max_occupancy: number;
+  base_price: number;
   price_per_night: number;
-  images: string[];
-  amenities: string[];
-  size_sqm?: number;
-  bed_type?: string;
-  view?: string;
+  max_occupancy: number;
+  room_size: number | null;
+  bed_type: string | null;
   quantity_available: number;
-}
-
-interface AccommodationLocation {
-  address: string;
-  city?: string;
-  country?: string;
-}
-
-interface Accommodation {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  location: AccommodationLocation | string;
-  rating?: number;
-  review_count?: number;
+  quantity: number;
+  totalPrice: number;
+  available: boolean;
   images: string[];
   amenities: string[];
-  rooms: Room[];
-  created_at?: string;
-  updated_at?: string;
 }
 
 interface AccommodationClientProps {
-  initialData: Accommodation | null;
-  slug: string;
+  initialData: {
+    id: string;
+    name: string;
+    description: string;
+    base_price?: number;
+    rating?: number;
+    room_types?: RoomType[];
+  };
 }
 
-const AccommodationClient = ({ initialData, slug }: AccommodationClientProps) => {
-  const [accommodation, setAccommodation] = useState<Accommodation | null>(initialData);
-  const [isLoading, setIsLoading] = useState(!initialData);
-  const [error, setError] = useState<Error | null>(null);
-  // Removed unused isFavorite state
-  const [bookingForm, setBookingForm] = useState<BookingFormData>({
-    checkIn: undefined,
-    checkOut: undefined,
-    adults: 2,
-    children: 0,
-    roomType: '',
-    specialRequests: '',
+export default function AccommodationClient({ initialData }: AccommodationClientProps) {
+  const router = useRouter();
+  
+  // State
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: new Date(),
+    to: addDays(new Date(), 2)
   });
-  const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
-
-  const params = useParams();
-
-  // Fetch accommodation data if not provided
-  useEffect(() => {
-    if (initialData) return;
-
-    const fetchAccommodation = async () => {
-      try {
-        setIsLoading(true);
-        const accommodationSlug = slug || (Array.isArray(params.slug) ? params.slug[0] : params.slug) || '';
-        const response = await fetch(`/api/accommodations/${accommodationSlug}`, {
-          headers: {
-            'Accept-Language': (params.locale as string) || 'en',
-          },
-          next: { revalidate: 3600 },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch accommodation');
-        }
-
-        const data = await response.json();
-        setAccommodation(data);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('An error occurred'));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchAccommodation();
-  }, [initialData, params.locale, params.slug, slug]);
-
-  // Handle booking form changes
-  const handleBookingFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setBookingForm(prev => ({
-      ...prev,
-      [name]: name === 'adults' || name === 'children' ? parseInt(value, 10) : value,
-    }));
-  };
-
-  // Handle date selection
-  const handleDateSelect = (date: Date | undefined, field: 'checkIn' | 'checkOut') => {
-    setBookingForm(prev => ({
-      ...prev,
-      [field]: date,
-    }));
-  };
+  const [selectedRoom, setSelectedRoom] = useState<RoomWithAvailability | null>(null);
+  const [adults, setAdults] = useState(2);
+  const [isBooking, setIsBooking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Calculate number of nights
-  const calculateNights = useCallback((start: Date | undefined, end: Date | undefined): number => {
-    if (!start || !end) return 0;
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  }, []);
+  const numberOfNights = useMemo(() => {
+    if (!dateRange?.from || !dateRange?.to) return 0;
+    return Math.max(1, differenceInDays(dateRange.to, dateRange.from));
+  }, [dateRange]);
 
-  // Calculate total price
-  const calculateTotalPrice = useCallback((): number => {
-    if (!selectedRoom || !bookingForm.checkIn || !bookingForm.checkOut || !accommodation?.rooms) return 0;
+  // Process room data
+  const processedRooms = useMemo<RoomWithAvailability[]>(() => {
+    if (!initialData.room_types?.length) return [];
     
-    const room = accommodation.rooms.find(r => r.id === selectedRoom);
-    if (!room) return 0;
-    
-    const nights = calculateNights(bookingForm.checkIn, bookingForm.checkOut);
-    return nights * room.price_per_night;
-  }, [selectedRoom, bookingForm.checkIn, bookingForm.checkOut, accommodation?.rooms, calculateNights]);
+    return initialData.room_types.map(room => ({
+      ...room,
+      id: String(room.id),
+      name: room.name || 'Standard Room',
+      description: room.description || '',
+      base_price: room.base_price || 0,
+      price_per_night: room.base_price || 0,
+      max_occupancy: room.max_occupancy || 2,
+      room_size: room.room_size ?? null,
+      bed_type: room.bed_type ?? null,
+      quantity_available: room.available_rooms || 0,
+      quantity: 1,
+      totalPrice: (room.base_price || 0) * numberOfNights,
+      available: (room.available_rooms || 0) > 0,
+      images: room.image_urls || [],
+      amenities: room.amenities || []
+    }));
+  }, [initialData.room_types, numberOfNights]);
 
-  const totalPrice = useMemo(() => calculateTotalPrice(), [calculateTotalPrice]);
+  // Set first available room as selected on initial load
+  useEffect(() => {
+    if (processedRooms.length > 0 && !selectedRoom) {
+      const firstAvailableRoom = processedRooms.find(room => room.available) || processedRooms[0];
+      setSelectedRoom(firstAvailableRoom);
+    }
+  }, [processedRooms, selectedRoom]);
 
-  // Format price
-  const formatPrice = (price: number | undefined): string => {
-    if (!price) return 'Price on request';
+  // Format price helper
+  const formatPrice = useCallback((price: number | string | undefined): string => {
+    const priceNum = typeof price === 'string' ? parseFloat(price) : price ?? 0;
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-    }).format(price);
-  };
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(priceNum);
+  }, []);
 
-  // Render loading state
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-amber-600" />
-      </div>
-    );
+  // Handle book now
+  const handleBookNow = useCallback(async () => {
+    if (!selectedRoom || !dateRange.from || !dateRange.to) {
+      setError('Please select a room and date range');
+      return;
+    }
+
+    setIsBooking(true);
+    setError(null);
+
+    try {
+      router.push(
+        `/book?roomId=${selectedRoom.id}` +
+        `&checkIn=${dateRange.from.toISOString()}` +
+        `&checkOut=${dateRange.to.toISOString()}` +
+        `&adults=${adults}`
+      );
+    } catch (err) {
+      setError('Failed to create booking. Please try again.');
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Booking error:', err);
+      }
+    } finally {
+      setIsBooking(false);
+    }
+  }, [selectedRoom, dateRange, adults, router]);
+
+  // Handle date range selection
+  const handleDateSelect = useCallback((selectedDate: Date | undefined) => {
+    if (!selectedDate) return;
+    
+    setDateRange(prev => {
+      if (!prev.from || prev.to) {
+        return { from: selectedDate, to: null };
+      } else if (prev.from) {
+        const start = prev.from;
+        const end = selectedDate;
+        return {
+          from: start < end ? start : end,
+          to: start < end ? end : start
+        };
+      }
+      return prev;
+    });
+  }, []);
+
+  // Handle adult count changes
+  const handleIncrementAdults = useCallback(() => {
+    if (selectedRoom && adults < selectedRoom.max_occupancy) {
+      setAdults(prev => prev + 1);
+    }
+  }, [adults, selectedRoom]);
+
+  const handleDecrementAdults = useCallback(() => {
+    if (adults > 1) {
+      setAdults(prev => prev - 1);
+    }
+  }, [adults]);
+
+  // Fetch available rooms when date range changes
+  useEffect(() => {
+    const fetchRooms = async () => {
+      if (!dateRange.from || !dateRange.to) return;
+      
+      try {
+        // TODO: Replace with actual API call
+        // const response = await fetch(`/api/rooms/available?from=${dateRange.from.toISOString()}&to=${dateRange.to.toISOString()}`);
+        // const data = await response.json();
+      } catch (err) {
+        setError('Failed to fetch available rooms');
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Error fetching rooms:', err);
+        }
+      }
+    };
+
+    fetchRooms();
+  }, [dateRange]);
+
+  if (!initialData) {
+    return <div>Loading accommodation data...</div>;
   }
 
-  // Render error state
-  if (error) {
-    return (
-      <div className="flex h-screen flex-col items-center justify-center">
-        <div className="text-2xl font-bold text-red-600">Error loading accommodation</div>
-        <p className="mt-2 text-gray-600">{error.message}</p>
-        <Button className="mt-4" onClick={() => window.location.reload()}>
-          Try Again
-        </Button>
-      </div>
-    );
-  }
-
-  // Render not found state
-  if (!accommodation) {
-    return (
-      <div className="flex h-screen flex-col items-center justify-center">
-        <div className="text-2xl font-bold">Accommodation not found</div>
-        <p className="mt-2 text-gray-600">The requested accommodation could not be found.</p>
-      </div>
-    );
-  }
-
-  // Render main content
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">{accommodation.name}</h1>
-        <div className="mt-2 flex items-center text-gray-600">
-          <MapPin className="mr-1 h-4 w-4" />
-          {typeof accommodation.location === 'string' ? (
-            <span>{accommodation.location}</span>
-          ) : (
-            <span>
-              {accommodation.location.address}
-              {accommodation.location.city && `, ${accommodation.location.city}`}
-              {accommodation.location.country && `, ${accommodation.location.country}`}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        {/* Left column */}
-        <div className="lg:col-span-2">
-          {/* Image gallery */}
-          <div className="mb-8">
-            {accommodation.images && accommodation.images.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4">
-                <div className="aspect-w-16 aspect-h-9 overflow-hidden rounded-lg">
-                  <img
-                    src={accommodation.images[0]}
-                    alt={accommodation.name}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                {accommodation.images.length > 1 && (
-                  <div className="grid grid-cols-4 gap-2">
-                    {accommodation.images.slice(1, 5).map((image, index) => (
-                      <div key={index} className="aspect-square overflow-hidden rounded-lg">
-                        <img
-                          src={image}
-                          alt={`${accommodation.name} ${index + 1}`}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex aspect-video items-center justify-center rounded-lg bg-gray-100">
-                <span className="text-gray-400">No images available</span>
-              </div>
-            )}
-          </div>
-
-          {/* Description */}
-          <div className="mb-8">
-            <h2 className="mb-4 text-2xl font-semibold">About this accommodation</h2>
-            <p className="text-gray-700">{accommodation.description}</p>
-          </div>
-
-          {/* Amenities */}
-          {accommodation.amenities && accommodation.amenities.length > 0 && (
-            <div className="mb-8">
-              <h2 className="mb-4 text-2xl font-semibold">Amenities</h2>
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-                {accommodation.amenities.map((amenity, index) => (
-                  <div key={index} className="flex items-center">
-                    <span className="mr-2 text-amber-600">•</span>
-                    <span>{amenity}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Rooms */}
-          {accommodation.rooms && accommodation.rooms.length > 0 && (
-            <div className="mb-8">
-              <h2 className="mb-4 text-2xl font-semibold">Rooms</h2>
-              <div className="space-y-6">
-                {accommodation.rooms.map((room) => (
-                  <Card key={room.id}>
-                    <CardContent className="p-6">
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                        <div className="md:col-span-2">
-                          <h3 className="text-xl font-semibold">{room.name}</h3>
-                          <p className="mt-2 text-gray-600">{room.description}</p>
-                          
-                          <div className="mt-4">
-                            <div className="flex items-center">
-                              <span className="font-medium">Max Occupancy:</span>
-                              <span className="ml-2">{room.max_occupancy} {room.max_occupancy === 1 ? 'person' : 'people'}</span>
-                            </div>
-                            {room.size_sqm && (
-                              <div className="mt-1">
-                                <span className="font-medium">Size:</span>
-                                <span className="ml-2">{room.size_sqm} m²</span>
-                              </div>
-                            )}
-                            {room.bed_type && (
-                              <div className="mt-1">
-                                <span className="font-medium">Bed Type:</span>
-                                <span className="ml-2">{room.bed_type}</span>
-                              </div>
-                            )}
-                            {room.view && (
-                              <div className="mt-1">
-                                <span className="font-medium">View:</span>
-                                <span className="ml-2">{room.view}</span>
-                              </div>
-                            )}
-                          </div>
-
-                          {room.amenities && room.amenities.length > 0 && (
-                            <div className="mt-4">
-                              <h4 className="font-medium">Room Amenities:</h4>
-                              <div className="mt-2 grid grid-cols-2 gap-2">
-                                {room.amenities.map((amenity, index) => (
-                                  <div key={index} className="flex items-center">
-                                    <span className="mr-2 text-amber-600">•</span>
-                                    <span>{amenity}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex flex-col items-end">
-                          <div className="text-right">
-                            <div className="text-2xl font-bold text-amber-600">
-                              {formatPrice(room.price_per_night)}
-                              <span className="text-sm font-normal text-gray-500">/night</span>
-                            </div>
-                            <Button
-                              className="mt-4 w-full"
-                              onClick={() => setSelectedRoom(room.id)}
-                            >
-                              Select Room
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right column - Booking form */}
-        <div>
-          <Card className="sticky top-4">
-            <CardHeader>
-              <CardTitle>Book Now</CardTitle>
-              <CardDescription>
-                Check availability and book your stay
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form>
-                <div className="space-y-4">
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-6">{initialData.name}</h1>
+      <p className="text-gray-600 mb-8">{initialData.description}</p>
+      
+      {/* Room Selection */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Room List */}
+        <div className="md:col-span-2 space-y-4">
+          {processedRooms.map(room => (
+            <Card key={room.id} className={`p-4 ${selectedRoom?.id === room.id ? 'border-blue-500' : ''}`}>
+              <CardContent>
+                <div className="flex justify-between items-start">
                   <div>
-                    <Label htmlFor="checkIn">Check-in</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !bookingForm.checkIn && "text-muted-foreground"
-                          )}
-                        >
-                          {bookingForm.checkIn ? (
-                            format(bookingForm.checkIn, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={bookingForm.checkIn}
-                          onSelect={(date) => handleDateSelect(date, 'checkIn')}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="checkOut">Check-out</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !bookingForm.checkOut && "text-muted-foreground"
-                          )}
-                        >
-                          {bookingForm.checkOut ? (
-                            format(bookingForm.checkOut, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={bookingForm.checkOut}
-                          onSelect={(date) => handleDateSelect(date, 'checkOut')}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="adults">Adults</Label>
-                      <Input
-                        id="adults"
-                        type="number"
-                        min="1"
-                        value={bookingForm.adults}
-                        onChange={handleBookingFormChange}
-                      />
+                    <h3 className="text-lg font-semibold">{room.name}</h3>
+                    <p className="text-gray-600">{room.description}</p>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500">Max Occupancy: {room.max_occupancy}</p>
+                      <p className="text-sm text-gray-500">Room Size: {room.room_size ? `${room.room_size} sqm` : 'N/A'}</p>
+                      <p className="text-sm text-gray-500">Bed Type: {room.bed_type || 'N/A'}</p>
                     </div>
-                    <div>
-                      <Label htmlFor="children">Children</Label>
-                      <Input
-                        id="children"
-                        type="number"
-                        min="0"
-                        value={bookingForm.children}
-                        onChange={handleBookingFormChange}
-                      />
+                    <div className="mt-2">
+                      <p className="text-lg font-semibold">
+                        {formatPrice(room.price_per_night)} <span className="text-sm font-normal">/ night</span>
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {numberOfNights} night{numberOfNights !== 1 ? 's' : ''}: {formatPrice(room.totalPrice)}
+                      </p>
                     </div>
                   </div>
-
-                  {selectedRoom && (
-                    <div className="mt-6 rounded-lg border bg-gray-50 p-4">
-                      <div className="flex justify-between">
-                        <div>
-                          <div className="font-medium">
-                            {accommodation.rooms.find(r => r.id === selectedRoom)?.name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {bookingForm.checkIn && bookingForm.checkOut && (
-                              `${calculateNights(bookingForm.checkIn, bookingForm.checkOut)} nights`
-                            )}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-medium">
-                            {formatPrice(totalPrice)}
-                          </div>
-                          {bookingForm.checkIn && bookingForm.checkOut && (
-                            <div className="text-xs text-gray-500">
-                              {formatPrice(accommodation.rooms.find(r => r.id === selectedRoom)?.price_per_night)} × {calculateNights(bookingForm.checkIn, bookingForm.checkOut)} nights
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <Button type="submit" className="mt-4 w-full">
-                        Book Now
-                      </Button>
-                    </div>
-                  )}
+                  <Button
+                    onClick={() => setSelectedRoom(room)}
+                    variant={selectedRoom?.id === room.id ? 'default' : 'outline'}
+                  >
+                    {selectedRoom?.id === room.id ? 'Selected' : 'Select'}
+                  </Button>
                 </div>
-              </form>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        
+        {/* Booking Summary */}
+        <div className="md:col-span-1">
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Your Stay</h2>
+              
+              {/* Date Selection */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Dates</label>
+                <div className="p-3 border rounded-md">
+                  {dateRange.from?.toLocaleDateString()} - {dateRange.to?.toLocaleDateString()}
+                </div>
+              </div>
+              
+              {/* Guest Count */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Guests</label>
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleDecrementAdults}
+                    disabled={adults <= 1}
+                  >
+                    -
+                  </Button>
+                  <span>{adults} {adults === 1 ? 'Adult' : 'Adults'}</span>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleIncrementAdults}
+                    disabled={!selectedRoom || adults >= (selectedRoom?.max_occupancy || 2)}
+                  >
+                    +
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Selected Room */}
+              {selectedRoom && (
+                <div className="mt-6 border-t pt-4">
+                  <h3 className="font-medium mb-2">Selected Room</h3>
+                  <p>{selectedRoom.name}</p>
+                  <p className="text-sm text-gray-600">
+                    {numberOfNights} night{numberOfNights !== 1 ? 's' : ''} • {formatPrice(selectedRoom.totalPrice)}
+                  </p>
+                </div>
+              )}
+              
+              {/* Book Now Button */}
+              <Button 
+                className="w-full mt-6" 
+                onClick={handleBookNow}
+                disabled={!selectedRoom || isBooking}
+              >
+                {isBooking ? 'Booking...' : 'Book Now'}
+              </Button>
+              
+              {error && (
+                <p className="text-red-500 text-sm mt-2">{error}</p>
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
     </div>
   );
-};
-
-export default AccommodationClient;
+}

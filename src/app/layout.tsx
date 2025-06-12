@@ -1,6 +1,7 @@
 import type { Viewport } from 'next';
 import { Poppins, Playfair_Display } from 'next/font/google';
 import { metadata, viewport as viewportConfig } from './metadata';
+import { ThemeProvider } from '@/providers/theme-provider';
 import '@/app/globals.css';
 
 // Fonts
@@ -27,9 +28,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${poppins.variable} ${playfair.variable}`}>
+    <html lang="en" className={`${poppins.variable} ${playfair.variable}`} suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans antialiased">
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

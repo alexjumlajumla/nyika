@@ -45,47 +45,52 @@ export interface Accommodation {
   name: string;
   slug: string;
   description: string;
-  type: AccommodationType;
-  rooms: Room[];
+  type: AccommodationType | string; // Allow string for flexibility
   
   // Location
-  location: string;
-  address?: string | null;
-  city?: string | null;
-  country?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
+  location: {
+    city: string;
+    address: string;
+    country: string;
+    coordinates: {
+      lat: number;
+      lng: number;
+    };
+  };
   
-  // Pricing and ratings
+  // Pricing and rating
   price: number;
   price_per_night: number;
   rating?: number | null;
   review_count?: number;
-  is_featured: boolean;
   
   // Media
-  amenities: string[];
   images: string[];
   featured_image?: string | null;
+  
+  // Features
+  amenities: string[];
+  is_active: boolean;
+  is_featured: boolean;
+  is_verified?: boolean;
   
   // Booking details
   check_in_time?: string | null;
   check_out_time?: string | null;
   max_guests?: number | null;
   min_nights?: number | null;
+  cancellation_policy?: string | null;
   
   // Additional info
-  cancellation_policy?: string | null;
   tags?: string[] | null;
   contact_email?: string | null;
   contact_phone?: string | null;
   website?: string | null;
+  destination_id?: string | null;
   social_links?: Record<string, string> | null;
   policies?: Record<string, string | boolean | number> | null;
   
   // System fields
-  is_active: boolean;
-  is_verified: boolean;
   created_at: string;
   updated_at: string;
   
